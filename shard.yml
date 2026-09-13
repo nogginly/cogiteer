@@ -1,0 +1,28 @@
+name: cogiteer
+version: 0.2.0
+license: MPL2
+
+crystal: ">= 1.19, < 2.0"
+
+description: >
+  Cogiteer is a command-line agentic cross-LLM session orchestrator.
+
+authors:
+  - nogginly@icloud.com
+
+targets:
+  cogiteer:
+    main: src/main.cr
+
+dependencies:
+  liaison:
+    github: modelarmy/liaison.cr
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+    version: ">= 1.7.0"
+  wiretap:
+    # Records live HTTP once, replays offline forever.
+    github: nogginly/wiretap.cr
+    version: ">= 0.4.1"

@@ -1,0 +1,23 @@
+.DS_Store
+config/dev
+/bin/
+/libs/
+/lib/
+/.crystal/
+/.shards/
+.spectator-failures
+.deleted_files/
+out/
+tmp*
+*enkaidu*
+CLAUDE.md
+
+# Ignore accidental push of archives
+*.zip
+
+# Ignore all db-related files at root
+*.db*
+
+# Cogiteer configs / sessions
+/cogiteer.yaml
+/.cogiteer
