@@ -17,7 +17,7 @@ module Cogiteer::Commands
   # has fewer snapshots than turns and has lost none of its conversation.
   #
   # Reads the newest snapshot per session and nothing else. That one file is
-  # already a complete point-in-time record (`docs/CLI_DESIGN.md`, *Session
+  # already a complete point-in-time record (`docs/DESIGN.md`, *Session
   # storage*), so the turn count and opening prompt come free from a read the
   # listing has to do anyway to prove the session is intact.
   module List

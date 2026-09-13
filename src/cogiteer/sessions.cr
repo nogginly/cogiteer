@@ -5,7 +5,7 @@ module Cogiteer
   class SessionError < Exception
   end
 
-  # Folder-per-session, snapshot-per-turn — see docs/CLI_DESIGN.md for why a
+  # Folder-per-session, snapshot-per-turn — see docs/DESIGN.md for why a
   # full `Archive` per turn rather than a diff log: MPSH already rebuilds the
   # whole request from the whole history on every call, so a session's true
   # state at any point already *is* a complete snapshot.

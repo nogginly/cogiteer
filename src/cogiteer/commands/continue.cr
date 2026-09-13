@@ -32,7 +32,7 @@ module Cogiteer::Commands
       config = Config.load
       # Not the config's own default — a session's own history. What "continue"
       # means is "whoever I was already talking to," which the config's
-      # default_deployment never actually recorded; see docs/CLI_DESIGN.md.
+      # default_deployment never actually recorded; see docs/DESIGN.md.
       deployment_name = on_deployment || Sessions.latest_deployment(session_id) ||
                         raise SessionError.new(
                           "session #{session_id.inspect} was saved before deployment tracking existed — " \

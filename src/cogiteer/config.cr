@@ -138,10 +138,10 @@ module Cogiteer
                    @defaults : Defaults = Defaults.new)
     end
 
-    # `$CWD/cogiteer.yaml`, then `$HOME/cogiteer.yaml`. See `docs/CLI_DESIGN.md`.
+    # `$CWD/cogiteer.yaml`, then `$HOME/cogiteer.yaml`. See `docs/DESIGN.md`.
     def self.load : Config
       path = locate || raise ConfigError.new(
-        "no cogiteer.yaml found via $COGITEER_CONFIG, #{Dir.current}, or $HOME — see docs/CLI_DESIGN.md")
+        "no cogiteer.yaml found via $COGITEER_CONFIG, #{Dir.current}, or $HOME — see docs/DESIGN.md")
       from_yaml(File.read(path))
     end
 
@@ -229,7 +229,7 @@ module Cogiteer
     LEGACY_HELP = "cogiteer.yaml has no 'servers' key, but its deployments carry inline server URLs — " \
                   "the format changed. Move 'protocol', 'server' (now 'url'), 'credential_env', " \
                   "'max_tokens_field' and any azure settings into a top-level 'servers:' entry, then " \
-                  "point each deployment at it with 'server: <name>'. See docs/CLI_DESIGN.md."
+                  "point each deployment at it with 'server: <name>'. See docs/DESIGN.md."
 
     private def self.legacy?(root : YAML::Any) : Bool
       deployments = root["deployments"]?.try(&.as_h?)

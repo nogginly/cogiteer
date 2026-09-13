@@ -7,7 +7,7 @@ module Cogiteer::Commands
   #
   # **Naming the id is the confirmation.** No prompt, and no `--yes` to make
   # the prompt go away. This CLI is non-interactive and single-shot by design
-  # (`docs/CLI_DESIGN.md`, *What this is, and what it deliberately is not*),
+  # (`docs/DESIGN.md`, *What this is, and what it deliberately is not*),
   # prompting needs a stdin the recorded-command specs do not have, and `rm
   # foo` does not ask either.
   #
