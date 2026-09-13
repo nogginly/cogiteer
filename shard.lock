@@ -6,7 +6,7 @@ shards:
 
   liaison:
     git: https://github.com/modelarmy/liaison.cr.git
-    version: 0.2.0+git.commit.3a6a3ecffdc2fdc0f65b110e8d42398f657f3022
+    version: 0.2.0+git.commit.2d883c1518b5470037c22346b6134a9a4a90bb62
 
   wiretap:
     git: https://github.com/nogginly/wiretap.cr.git
