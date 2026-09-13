@@ -19,5 +19,5 @@ CLAUDE.md
 *.db*
 
 # Cogiteer configs / sessions
-/liaison.yaml
-/.liaison
+/cogiteer.yaml
+/.cogiteer

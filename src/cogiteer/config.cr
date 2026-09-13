@@ -141,11 +141,11 @@ module Cogiteer
     # `$CWD/cogiteer.yaml`, then `$HOME/cogiteer.yaml`. See `docs/CLI_DESIGN.md`.
     def self.load : Config
       path = locate || raise ConfigError.new(
-        "no cogiteer.yaml found via $LIAISON_CONFIG, #{Dir.current}, or $HOME — see docs/CLI_DESIGN.md")
+        "no cogiteer.yaml found via $COGITEER_CONFIG, #{Dir.current}, or $HOME — see docs/CLI_DESIGN.md")
       from_yaml(File.read(path))
     end
 
-    # Explicit beats implicit: `$LIAISON_CONFIG`, if set, names the file
+    # Explicit beats implicit: `$COGITEER_CONFIG`, if set, names the file
     # directly and skips the search — the same reasoning `$COGITEER_HOME`
     # already exists for `Sessions`. Not just a testing convenience: without
     # it, a sandboxed test has no way to avoid being shadowed by whatever
@@ -153,7 +153,7 @@ module Cogiteer
     # `$CWD` or `$HOME`, and checking `$CWD` first gives an explicit override
     # nothing to override *with*.
     def self.locate : String?
-      return ENV["LIAISON_CONFIG"]? if ENV["LIAISON_CONFIG"]?
+      return ENV["COGITEER_CONFIG"]? if ENV["COGITEER_CONFIG"]?
 
       cwd_candidate = File.join(Dir.current, "cogiteer.yaml")
       return cwd_candidate if File.exists?(cwd_candidate)

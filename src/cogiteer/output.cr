@@ -132,7 +132,7 @@ module Cogiteer
     end
 
     def no_sessions : Nil
-      error_stream.puts "No sessions yet. Start one with: liaison start <deployment> <prompt...>"
+      error_stream.puts "No sessions yet. Start one with: cogiteer start <deployment> <prompt...>"
     end
 
     # A session transcript.
