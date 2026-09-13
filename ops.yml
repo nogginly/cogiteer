@@ -42,5 +42,5 @@ actions:
     description: Run all test specs
     load_secrets: true
   test:
-    command: ops test_specs && ops lint
+    command: ops test_specs && ops build && ops lint
     description: Run all tests, including linting
