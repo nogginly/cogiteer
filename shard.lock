@@ -1,0 +1,14 @@
+version: 2.0
+shards:
+  ameba:
+    git: https://github.com/crystal-ameba/ameba.git
+    version: 1.7.0
+
+  liaison:
+    git: https://github.com/modelarmy/liaison.cr.git
+    version: 0.2.0+git.commit.3a6a3ecffdc2fdc0f65b110e8d42398f657f3022
+
+  wiretap:
+    git: https://github.com/nogginly/wiretap.cr.git
+    version: 0.4.2
+
