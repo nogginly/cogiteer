@@ -101,6 +101,8 @@ Puts `cogiteer` in `bin/`. Requires Crystal 1.19 or newer.
 Document                          |Holds                                          
 ----------------------------------|-----------------------------------------------
 [docs/DESIGN.md](./docs/DESIGN.md)|Config, session storage, verb grammar, and why 
+[SCOPE.md](./SCOPE.md)            |The worklist: open questions, and their traps  
+[HANDOFF.md](./HANDOFF.md)        |Where things stand and what is next            
 [`liaison`][liaison]              |The shard underneath: protocols, MPSH, handoffs
 
 ## Contributions, by invitation!
