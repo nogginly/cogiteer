@@ -11,12 +11,14 @@ module Cogiteer::Commands
     extend self
 
     USAGE = "usage: cogiteer start <deployment> <prompt...> [--id <session-id>] " \
-            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning]"
+            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning] " \
+            "[--max-tool-calls N]"
 
     def run(args : Array(String)) : Nil
       chosen_id = nil.as(String?)
       stream_flag = nil.as(Bool?)
       show_reasoning = nil.as(Bool?)
+      max_tool_calls = nil.as(Int32?)
       OptionParser.parse(args) do |parser|
         parser.on("--id SESSION_ID", "name this session instead of taking a generated name") do |value|
           chosen_id = value
@@ -25,6 +27,10 @@ module Cogiteer::Commands
         parser.on("--no-stream", "wait for the whole reply") { stream_flag = false }
         parser.on("--show-reasoning", "put the model's thinking on stderr as it arrives") { show_reasoning = true }
         parser.on("--hide-reasoning", "keep the model's thinking off the terminal") { show_reasoning = false }
+        parser.on("--max-tool-calls N", "ceiling on tool calls for this turn; 0 offers no tools") do |value|
+          max_tool_calls = value.to_i? ||
+                           raise ArgumentError.new("--max-tool-calls is #{value.inspect} — expected a whole number")
+        end
       end
 
       deployment_name, prompt = parse(args)
@@ -45,11 +51,18 @@ module Cogiteer::Commands
 
       display = Display.resolve(config.defaults, stream_flag, show_reasoning, Output.stream)
 
+      # Copied out of the closured flag before it is tested, for the reason
+      # `requested` above gives: OptionParser holds it, so it never narrows
+      # out of `Int32?` however it is written.
+      requested_calls = max_tool_calls
+      tool_calls = requested_calls || config.defaults.max_tool_calls
+
       session = Liaison::MPSH::Session.new
       reply, report = Progress.while_waiting("waiting on #{deployment_name}", Output.error_stream) do |ticker|
         Query.run(provider, d.model, session, prompt,
           reasoning: d.reasoning, retention: d.reasoning_retention,
-          display: display, indicator: ticker)
+          display: display, indicator: ticker,
+          max_tool_calls: tool_calls)
       end
 
       Sessions.snapshot(id, session, deployment_name)
