@@ -163,22 +163,31 @@ file.
 
 ### `defaults`: how the CLI behaves
 
-Neither key describes where a request goes or what is asked of a model, which
-is why they are not on a server or a deployment. They describe what happens in
-the terminal while an answer arrives.
+No key here describes where a request goes or what is asked of a model, which
+is why they are not on a server or a deployment. They describe what the CLI
+does while an answer is being got.
 
-Key             |Default|Flag                     |Means                                        
-----------------|-------|-------------------------|---------------------------------------------
-`streaming`     |`false`|`--stream`, `--no-stream`|Show the reply as it arrives                 
-`show_reasoning`|`false`|`--show-reasoning`       |Put reasoning deltas on stderr as they arrive
+Key             |Default|Flag                     |Means                                                 
+----------------|-------|-------------------------|------------------------------------------------------
+`streaming`     |`false`|`--stream`, `--no-stream`|Show the reply as it arrives                          
+`show_reasoning`|`false`|`--show-reasoning`       |Put reasoning deltas on stderr as they arrive         
+`max_tool_calls`|`50`   |`--max-tool-calls`       |Ceiling on tool calls in one turn; `0` offers no tools
 
 **Every key here pairs with a flag of the same name**, and that is the rule the
 block is held to rather than a coincidence. A key with no flag behind it is how
 a section like this turns into a junk drawer, and a key spelled differently
 from its flag is a translation table someone has to keep in step with `--help`.
 
-Both default to false, which is what the CLI did before the block existed. An
-`cogiteer.yaml` written before this keeps meaning exactly what it meant.
+The two flags default to false, which is what the CLI did before the block
+existed. `max_tool_calls` is the one key whose default is not the old
+behaviour: tools are offered unless a `cogiteer.yaml` says otherwise, and `0`
+is how it says otherwise. The argument for that default, and for counting
+calls rather than rounds, is in *Tools* below.
+
+Absent is not zero. `parse_flag` can treat a missing key as `false` because
+nobody asks for `false` by omission, but `0` is a thing an operator means, so
+`parse_count` takes the built-in as a fallback rather than letting the empty
+case double as a value.
 
 Precedence — flag, then this block, then a terminal test — is in *Streaming*
 below, along with the one asymmetry in it worth arguing about.
@@ -552,28 +561,171 @@ returns. Recorded so it is not rediscovered as a bug.
 
 ## Deliberately deferred, not forgotten
 
-- **Tool execution.** `Client#send`'s turn loop, including tool dispatch, is
-  caller-owned by design (`client.cr`'s own doc comment). Whether `cogiteer
-  start`/`continue` take tool declarations at all in v1, or ship text-only
-  first, is still open — leaning text-only first.
+- **Tool execution.** Built; see *Tools* below. What is still deferred from it:
+  a read-only mode, an operator-settable sandbox root, and a config key for the
+  message a refused call carries.
 
-  **Declaring and executing are one decision, not two**, which is a better
-  argument for that lean than the original "smaller surface" was.
-  `Repair.needed?` requires `ending.cut?`, so a turn that *completes* holding a
-  tool call is untouched, and nothing in `Client` or this CLI enforces
-  `Repair.sendable?` — it appears only in specs. A CLI that declares tools
-  without dispatching them therefore writes exactly the unsendable session the
-  archive exists to prevent, and nothing notices until the next `continue` is
-  rejected by a protocol strict enough to care. There is no safe half-step:
-  either the CLI runs something, or it declares nothing.
+## Tools
 
-  What the terminal prints while a call is in flight is settled ahead of this,
-  in *Printed bytes precede repair* above. The library half is now built —
-  `Liaison::Function` and `Liaison::Toolbox`, see [`liaison`'s
-  TOOL_EXECUTION.md][tool-execution] — so what remains is genuinely a CLI
-  question: whether the executable declares anything, and what it would run.
-  `Toolbox#dispatch` already reads the repaired reply, so the ordering rule
-  above is enforced whatever the CLI decides.
+The CLI gives a model filesystem tools, rooted at the directory it was run in,
+and runs them itself. `max_tool_calls: 0` turns that off and reduces a turn to
+the single exchange it was before any of this existed.
+
+### Why `FsUtils::Tools`, and not its helpers
+
+[`fsutils`][fsutils] offers two layers: `Find`, `Grep`, `Reader`, `Writer` and
+`Replacer`, and a `Tools` layer above them. The obvious instinct is that tool
+calling belongs near the agent, and that taking the upper layer puts a foreign
+opinion about tool calling inside this project.
+
+It does not, because that layer contains no tool calling. There is no protocol
+in it, no dispatch loop, no turn, no `is_error`, no notion of a model reply —
+`Definition` deliberately hands over three plain strings rather than a
+vendor-shaped blob, and `Tools#call` takes named arguments and returns a
+response. What the layer actually holds is sandbox confinement, strict argument
+extraction, an output-byte budget, a common envelope, and the prose a model
+reads when something goes wrong.
+
+None of that is specific to this application, and all of it is work the next
+host would repeat. Writing it here would move roughly 1,700 lines and 1,500
+lines of its tests into a place where nobody is watching them, the sandbox
+most of all: resolve-then-compare, a separator check so `/srv/project-secrets`
+cannot pass for root `/srv/project`, canonicalising only the existing prefix so
+a missing file reports honestly. Reimplementing that is the same work done once
+more, less well tested.
+
+The one thing the upper layer costs is tool naming, which it does not let a
+host change. Nothing here wants to, and if that changes it is a request to that
+shard rather than a reason to own the layer.
+
+### The adapter owns the seam, and neither library should close it
+
+A model's arguments arrive as `MPSH::Object` and are wanted as
+`Hash(String, JSON::Any)`. The two libraries disagree on purpose. `MPSH::Value`
+exists so canonical types carry no parse artifact; `FsUtils::Tools::Arguments`
+takes `JSON::Any` so a model's mistake — `max_matches: "200"` — survives far
+enough into that shard to be refused there, in its own vocabulary, with its own
+suggestion.
+
+Both are right locally, so the conversion lives here. The tempting fixes are
+both library changes whose only beneficiary is this caller: a `Value#to_json_any`
+would put a serialization identity back into the types that exist to avoid one,
+and typed argument structs on the far side would move rejection into the host
+and break that layer's promise never to raise for anything a model can fix.
+
+The conversion is total — every arm of `MPSH::Value` has a `JSON::Any`
+counterpart — so nothing is lost and it cannot fail. `Int64` stays `Int64`,
+which is what a schema's `integer` is read from downstream.
+
+### Failure is a raise, because that is what sets `is_error`
+
+`FsUtils` reports failure inside the body as `ok: false`. Every protocol carries
+it on the block instead. Left alone, a model would see a successful tool result
+whose body said otherwise.
+
+`Function#call` returns blocks and cannot set the flag; `Toolbox` builds the
+result block and sets `is_error` when the call raises. So the adapter raises
+`Function::Failure` carrying the **whole envelope**, not just `error.message` —
+the code and the suggestion are the parts a model acts on.
+
+### The ceiling counts calls, not rounds
+
+A turn is bounded, because a model asking for one more file each time is
+otherwise unbounded. The unit is the whole turn's calls.
+
+Counting rounds is the tempting alternative, since cost is dominated by
+requests: each round resends the entire conversation, so a hundred rounds of
+one call costs far more than ten rounds of ten. But every round holds at least
+one call, so **a cap on calls bounds rounds as well** — where a cap on rounds
+leaves a single round free to make a hundred calls, and it is calls, not
+rounds, that put tool results into the context.
+
+The cost is that width and depth share one budget: a model opening with a wide
+parallel search has less left to iterate with. That is why the default is 50
+rather than 10. This is a ceiling on a runaway, not a budget to be spent, and
+an honest turn should never reach it.
+
+A round that does not fit is **split, not refused**. As many calls run as the
+budget allows and the rest come back refused, in the same message. Refusing the
+whole round would throw away work the model correctly asked for, and the
+refusal block has to exist for the other case anyway.
+
+`Toolbox#dispatch` runs every call in the message it is given and keeps `run`
+private, so a partial round cannot go through it. The runnable calls are passed
+as a synthetic assistant message; the refusals are paired to their `call_id` by
+hand. Server-executed calls are neither counted nor run — the provider ran
+them, and charging a budget for work this process did not do could exhaust it
+without a single local call.
+
+### Two endings, and why the second one exists
+
+Once the budget is spent, the next request still declares the tools and adds
+`tool_choice: None`. Dropping the tools instead would be a stronger guarantee
+and is not available: on Anthropic, a request whose history holds tool blocks
+and whose tool list is empty is rejected outright. It would also invalidate the
+prefix cache from position zero, on the largest history the turn will ever have.
+
+A provider that honours the choice replies in prose, and the turn ends with a
+summary the user can resume from. That is the intended ending and it is what
+`spec/cogiteer/tools/anthropic_tools_spec.cr` records.
+
+A provider that ignores it replies with more calls. Those are refused, appended,
+and the loop stops without a further request — so the session ends on a
+user-role message of tool results. That is sendable: `Repair.sendable?` asks
+only that every call has a result, and `Capability::Structural`'s
+`MergeConsecutiveRoles` already exists for the two consecutive user messages a
+later `continue` produces. What is lost is the closing prose, not the session.
+
+**Enforcement is a property of the server, not of the protocol.** Gemini is
+documented as ignoring the choice once a conversation holds a function call.
+Ollama's chat-completions endpoint does not implement `tool_choice` at all, and
+answers a `"none"` with a call — so a local deployment behaves like Gemini over
+a protocol that is otherwise strict about it. The loop therefore checks the
+reply rather than trusting the request, on every protocol.
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TB
+    START(["Query.run, prompt appended"]) --> ZERO{"max_tool_calls<br/>is zero?"}
+    ZERO -->|yes| PLAIN["send with no tools"]
+    PLAIN --> PDONE(["return reply"])
+
+    ZERO -->|no| SEND["send with tools;<br/>tool_choice None<br/>once budget is spent"]
+    SEND --> APPEND["append repaired reply"]
+    APPEND --> CALLS{"reply holds calls?<br/>server-executed ignored"}
+
+    CALLS -->|no| DONE(["return reply"])
+    CALLS -->|yes| LEFT{"budget remaining?"}
+
+    LEFT -->|none| REFUSE["refuse every call"]
+    REFUSE --> STOP(["stop, no further request<br/>session ends on results"])
+
+    LEFT -->|some| SPLIT["take as many calls as fit"]
+    SPLIT --> RUN["dispatch those<br/>via a synthetic message"]
+    RUN --> REST["refuse any remainder"]
+    REST --> MERGE["append one results message,<br/>decrement budget"]
+    MERGE --> SEND
+
+    classDef guard stroke:#ef6c00,stroke-width:3px
+    class ZERO,LEFT guard
+```
+
+### Built per invocation, never memoised
+
+`FsUtils::Tools` fixes its sandbox root at construction, and `Liaison::Function`
+warns separately that instances outlive a call and leak between sessions. This
+process runs one session and exits, which makes a memoised toolbox safe by
+accident. `Query.run` builds it instead, so it is safe on purpose.
+
+### What the terminal shows while a call is in flight
+
+Nothing durable. The ticker relabels; `Output.reply` prints text blocks and not
+calls. *Printed bytes precede repair* settled this before there was anything to
+apply it to, and it is why a streamed run and its saved session still agree
+exactly.
 
 ## Streaming
 
@@ -819,5 +971,6 @@ found a channel `stop` had already closed, took the break branch on its first
 pass and drew nothing. The design anticipated being restarted; the code had
 never been. Channels are now made per `start`.
 
+[fsutils]: https://github.com/nogginly/fsutils.cr
 [tool-execution]: https://github.com/ModelArmy/liaison.cr/blob/main/docs/TOOL_EXECUTION.md
 [streaming-design]: https://github.com/ModelArmy/liaison.cr/blob/main/docs/STREAMING_DESIGN.md
