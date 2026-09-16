@@ -52,4 +52,14 @@ rescue e : Cogiteer::ConfigError | Cogiteer::SessionError | ArgumentError
 rescue e : Liaison::TransportError
   STDERR.puts "cogiteer: #{e.message}"
   exit 1
+rescue e : Liaison::Capability::RefusedError
+  # Carrying a session onto a provider that cannot replay part of it. Usually
+  # reasoning: one model's thinking cannot be replayed as another's, and the
+  # policy refuses rather than discarding it silently. Operator-fixable, so it
+  # exits like any other configuration problem instead of arriving as a stack
+  # trace.
+  STDERR.puts "cogiteer: #{e.message}"
+  STDERR.puts "cogiteer: this session holds content the target cannot replay — " \
+              "set 'reasoning_retention: completed_turns' on that deployment to drop it"
+  exit 1
 end
