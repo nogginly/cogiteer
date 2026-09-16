@@ -117,14 +117,36 @@ module Cogiteer
   # behind it should be viewed with suspicion — that is how a section like
   # this becomes a junk drawer.
   #
-  # Both default to false. The quiet, non-streaming, no-thinking-shown
+  # Both flags default to false. The quiet, non-streaming, no-thinking-shown
   # behaviour is what the CLI did before either key existed, so an
   # `cogiteer.yaml` written today keeps meaning what it meant.
   struct Defaults
+    # A ceiling on a runaway, not a budget. High enough that an honest session
+    # never reaches it, which is what stops width and depth competing: a model
+    # that opens with a wide parallel search should still have room left to
+    # act on what it found.
+    #
+    # Counted in calls rather than in rounds. Every round holds at least one
+    # call, so a cap on calls bounds the number of requests as well — where a
+    # cap on rounds leaves one round free to make a hundred calls, and it is
+    # calls that put tool results into the context.
+    #
+    # Zero declares no tools at all, which is also what the CLI did before any
+    # of this existed.
+    DEFAULT_MAX_TOOL_CALLS = 50
+
     getter? streaming : Bool
     getter? show_reasoning : Bool
+    getter max_tool_calls : Int32
 
-    def initialize(@streaming : Bool = false, @show_reasoning : Bool = false)
+    def initialize(@streaming : Bool = false, @show_reasoning : Bool = false,
+                   @max_tool_calls : Int32 = DEFAULT_MAX_TOOL_CALLS)
+      raise ConfigError.new("max_tool_calls is #{@max_tool_calls} — expected 0 or more") if @max_tool_calls < 0
+    end
+
+    # Whether this run offers tools at all.
+    def tools? : Bool
+      @max_tool_calls > 0
     end
   end
 
@@ -195,12 +217,26 @@ module Cogiteer
       return Defaults.new if node.nil? || node.raw.nil?
 
       node.as_h? || raise ConfigError.new(
-        "'defaults' is not a block — expected 'defaults:' with 'streaming' or 'show_reasoning' under it")
+        "'defaults' is not a block — expected 'defaults:' with keys such as 'streaming' under it")
 
       Defaults.new(
         streaming: parse_flag(node, "streaming"),
         show_reasoning: parse_flag(node, "show_reasoning"),
+        max_tool_calls: parse_count(node, "max_tool_calls", Defaults::DEFAULT_MAX_TOOL_CALLS),
       )
+    end
+
+    # Absent means the built-in, not zero. Zero is a thing someone can ask for
+    # — it turns tools off — so it cannot double as "unset".
+    private def self.parse_count(node : YAML::Any, key : String, fallback : Int32) : Int32
+      field = node[key]?
+      return fallback if field.nil? || field.raw.nil?
+
+      value = field.as_i? ||
+              raise ConfigError.new("'defaults.#{key}' is #{field.raw.inspect} — expected a whole number")
+      raise ConfigError.new("'defaults.#{key}' is #{value} — expected 0 or more") if value < 0
+
+      value
     end
 
     # Anything that is not a boolean is refused, and the message names the key
