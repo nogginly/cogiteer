@@ -17,6 +17,8 @@ targets:
 dependencies:
   liaison:
     github: modelarmy/liaison.cr
+  fsutils:
+    github: nogginly/fsutils.cr
 
 development_dependencies:
   ameba:

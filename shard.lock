@@ -4,9 +4,13 @@ shards:
     git: https://github.com/crystal-ameba/ameba.git
     version: 1.7.0
 
+  fsutils:
+    git: https://github.com/nogginly/fsutils.cr.git
+    version: 0.2.1+git.commit.4b664bb1e044cdaed610a02ad98708bca9dedb6b
+
   liaison:
     git: https://github.com/modelarmy/liaison.cr.git
-    version: 0.2.0+git.commit.2d883c1518b5470037c22346b6134a9a4a90bb62
+    version: 0.2.2+git.commit.5afaaa08e36fbe25039011e48360f34bc3afd1b6
 
   wiretap:
     git: https://github.com/nogginly/wiretap.cr.git
