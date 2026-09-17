@@ -30,8 +30,15 @@ module Cogiteer::Tools
     # someone is standing in. `FsUtils::Tools::Sandbox` resolves every
     # agent-supplied path against it and compares the resolved form, so `..`
     # and symlinks cannot launder a path past it.
-    def self.toolbox(root : String = Dir.current) : Liaison::Toolbox
-      tools = FsUtils::Tools.new(root)
+    # `reproducible` drops the fields that report *when and where* a call ran
+    # — a walk's `elapsed_ms`, a find result's `modified` — leaving a response
+    # derived only from the tree. Off by default, because an mtime is how a
+    # model notices a file changed under it; on where two runs of the same
+    # prompt have to agree, which includes every recorded spec.
+    def self.toolbox(root : String = Dir.current, reproducible : Bool = false) : Liaison::Toolbox
+      config = FsUtils::Tools::Config.new
+      config.reproducible = reproducible
+      tools = FsUtils::Tools.new(root, config)
       functions = tools.definitions
         .select { |definition| ENABLED.includes?(definition.name) }
         .map { |definition| FileTool.new(tools, definition).as(Liaison::Function) }

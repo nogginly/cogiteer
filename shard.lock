@@ -6,7 +6,7 @@ shards:
 
   fsutils:
     git: https://github.com/nogginly/fsutils.cr.git
-    version: 0.2.1+git.commit.4b664bb1e044cdaed610a02ad98708bca9dedb6b
+    version: 0.2.2+git.commit.f31573eb61a9c54fb8e723c322ff041f477a50cd
 
   liaison:
     git: https://github.com/modelarmy/liaison.cr.git

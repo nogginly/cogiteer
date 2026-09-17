@@ -138,9 +138,11 @@ module Cogiteer
     getter? streaming : Bool
     getter? show_reasoning : Bool
     getter max_tool_calls : Int32
+    getter? reproducible_tools : Bool
 
     def initialize(@streaming : Bool = false, @show_reasoning : Bool = false,
-                   @max_tool_calls : Int32 = DEFAULT_MAX_TOOL_CALLS)
+                   @max_tool_calls : Int32 = DEFAULT_MAX_TOOL_CALLS,
+                   @reproducible_tools : Bool = false)
       raise ConfigError.new("max_tool_calls is #{@max_tool_calls} — expected 0 or more") if @max_tool_calls < 0
     end
 
@@ -223,6 +225,7 @@ module Cogiteer
         streaming: parse_flag(node, "streaming"),
         show_reasoning: parse_flag(node, "show_reasoning"),
         max_tool_calls: parse_count(node, "max_tool_calls", Defaults::DEFAULT_MAX_TOOL_CALLS),
+        reproducible_tools: parse_flag(node, "reproducible_tools"),
       )
     end
 
