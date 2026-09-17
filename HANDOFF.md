@@ -90,13 +90,13 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**The two writers, one at a time.** `read_text_file`, `search_file_contents`
-and `find_files` each have a recorded spec. `write_text_file` and
-`text_replace` are offered but not yet exercised; `text_replace` first,
-because it needs existing content and so proves the scratch setup.
+**`write_text_file`, the last tool.** `read_text_file`,
+`search_file_contents`, `find_files` and `text_replace` each have a recorded
+spec. `spec/cogiteer/tools/replace_spec.cr` is the pattern to follow.
 
 A writer changes files, and fixtures must not be edited, so each writer spec
-works on a copy. The copy's location is settled, and each part is load-bearing:
+works on a copy made by `ToolHarness.with_scratch`. The copy's location is
+settled, and each part is load-bearing:
 
 1. **A fixed folder inside the repo, `tmp/tool_scratch/<id>/`**, gitignored by
    `tmp*`. Not `Dir.tempdir`: the sandbox root is the working directory, so a
@@ -111,8 +111,11 @@ works on a copy. The copy's location is settled, and each part is load-bearing:
    guarantee.
 4. **Prompt with the relative path**, e.g. `tmp/tool_scratch/tools_text_replace/notes.md`.
 
-A helper for this belongs in `ToolHarness` beside `with_config`, written with
-the first writer spec rather than ahead of it.
+`spec/fixtures/editable/draft.md` is the fixture for edits. It holds one
+target of each kind — a unique line (used by the `text_replace` spec), a word
+repeated for `replace_all`, and a line meant to be deleted — so a new writer
+spec can pick its edit without a new fixture. Editing the original re-records
+every writer transcript.
 
 **What a writer spec asserts.** `fsutils` has its own tests, so do not re-test
 its semantics. What only this project can break is the path from the model's

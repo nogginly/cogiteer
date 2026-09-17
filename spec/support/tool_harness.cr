@@ -78,6 +78,36 @@ module ToolHarness
     end
   end
 
+  # Where writer specs edit copies of fixtures. Inside the repository because
+  # the sandbox root is the working directory, and fixed because the path
+  # appears in the prompt, the call's arguments and the result.
+  SCRATCH_ROOT = "tmp/tool_scratch"
+
+  # Copies `fixtures` into `tmp/tool_scratch/<id>/` and yields that folder's
+  # relative path, for a spec whose tools edit files.
+  #
+  # ```
+  # ToolHarness.with_scratch("tools_text_replace", ["spec/fixtures/editable/draft.md"]) do |dir|
+  #   File.read(File.join(dir, "draft.md"))
+  # end
+  # ```
+  #
+  # Pass the spec's transcript name as `id`: it is already unique, and renaming
+  # it re-records either way. The folder is emptied *before* the copy, so edits
+  # left by a spec that failed halfway never reach the next run's request body;
+  # removing it afterwards only keeps `tmp/` tidy.
+  def self.with_scratch(id : String, fixtures : Array(String), &) : Nil
+    dir = File.join(SCRATCH_ROOT, id)
+    FileUtils.rm_rf(dir)
+    Dir.mkdir_p(dir)
+    fixtures.each { |fixture| FileUtils.cp(fixture, File.join(dir, File.basename(fixture))) }
+    begin
+      yield dir
+    ensure
+      FileUtils.rm_rf(dir)
+    end
+  end
+
   # The one session the run created. Fails the spec if there is not exactly one.
   def self.only_session : Liaison::MPSH::Session
     ids = Dir.children(Cogiteer::Sessions.folder)
