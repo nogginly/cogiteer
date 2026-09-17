@@ -1,0 +1,56 @@
+{
+  "name": "tools_search_file_contents",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "3011",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Use search_file_contents to find every line containing SALSIFY-9002. Pass paths as a list: [\\\"spec/fixtures/notes\\\"]. Use mode \\\"lines\\\". Then tell me which files and line numbers matched.\"}]}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"search_file_contents\",\"description\":\"Search file contents by regular expression. Binary files, files over 5000000 bytes and the usual noise directories (.git, node_modules, vendor, build) are skipped automatically. Bounded: check `truncated` and `notice`, because a short result may be a sample. Use mode \\\"paths\\\" first when the question is which files mention something — it is far cheaper than reading every matching line. All paths are relative to the workspace root; paths outside it are refused.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pattern\": {\n      \"type\": \"string\",\n      \"description\": \"Regular expression to search for. Set fixed_string if you mean it literally.\"\n    },\n    \"paths\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Directories or files to search. Defaults to the workspace root.\"\n    },\n    \"mode\": {\n      \"type\": \"string\",\n      \"enum\": [\"lines\", \"paths\"],\n      \"description\": \"\\\"lines\\\" returns every matching line. \\\"paths\\\" returns each matching file once, with its first hit. Default \\\"lines\\\".\"\n    },\n    \"ignore_case\": {\n      \"type\": \"boolean\",\n      \"description\": \"Case-insensitive matching. Default false.\"\n    },\n    \"fixed_string\": {\n      \"type\": \"boolean\",\n      \"description\": \"Treat the pattern as a literal string, not a regex. Default false.\"\n    },\n    \"types\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Named file types to restrict to, e.g. \\\"cr\\\", \\\"py\\\", \\\"web\\\". Cheaper and less error-prone than hand-written globs.\"\n    },\n    \"include_globs\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Only search files matching these globs, tested against the name and the relative path.\"\n    },\n    \"exclude_globs\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Skip files matching these globs. Beats include_globs.\"\n    },\n    \"max_matches\": {\n      \"type\": \"integer\",\n      \"description\": \"Stop after this many matches, or files in \\\"paths\\\" mode. Default 200.\"\n    },\n    \"max_matches_per_file\": {\n      \"type\": \"integer\",\n      \"description\": \"Matches any one file may contribute, so a single noisy file cannot fill the result. Default 20.\"\n    },\n    \"max_depth\": {\n      \"type\": \"integer\",\n      \"description\": \"Do not descend below this depth. Default 25.\"\n    },\n    \"include_hidden\": {\n      \"type\": \"boolean\",\n      \"description\": \"Search dotfiles and dot-directories. Default false.\"\n    },\n    \"timeout_seconds\": {\n      \"type\": \"number\",\n      \"description\": \"Give up after this long. Default 10.0.\"\n    }\n  },\n  \"required\": [\"pattern\"]\n}}}]}",
+        "body_digest": "5272e162977578f2b227ad1e53cc61210546ff02877004682c9e4a0433ab5880"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Thu, 17 Sep 2026 12:56:50 GMT",
+          "Content-Length": "906"
+        },
+        "body": "{\"id\":\"chatcmpl-342\",\"object\":\"chat.completion\",\"created\":1789649810,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"I need to search for the string \\\"SALSIFY-9002\\\" within the directory `spec/fixtures/notes`.\\nI will use the `search_file_contents` tool with the following parameters:\\n- `pattern`: \\\"SALSIFY-9002\\\"\\n- `paths`: [\\\"spec/fixtures/notes\\\"]\\n- `mode`: \\\"lines\\\"\\n\\nAfter I get the results, I will list the files and line numbers that matched.\",\"tool_calls\":[{\"id\":\"call_l5fgrezb\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"search_file_contents\",\"arguments\":\"{\\\"mode\\\":\\\"lines\\\",\\\"paths\\\":[\\\"spec/fixtures/notes\\\"],\\\"pattern\\\":\\\"SALSIFY-9002\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":653,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens\":141,\"total_tokens\":794}}\n"
+      },
+      "recorded_at": "2026-09-17T12:56:50Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "4212",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Use search_file_contents to find every line containing SALSIFY-9002. Pass paths as a list: [\\\"spec/fixtures/notes\\\"]. Use mode \\\"lines\\\". Then tell me which files and line numbers matched.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789649810576_0\",\"type\":\"function\",\"function\":{\"name\":\"search_file_contents\",\"arguments\":\"{\\\"mode\\\":\\\"lines\\\",\\\"paths\\\":[\\\"spec/fixtures/notes\\\"],\\\"pattern\\\":\\\"SALSIFY-9002\\\"}\"}}],\"reasoning_content\":\"I need to search for the string \\\"SALSIFY-9002\\\" within the directory `spec/fixtures/notes`.\\nI will use the `search_file_contents` tool with the following parameters:\\n- `pattern`: \\\"SALSIFY-9002\\\"\\n- `paths`: [\\\"spec/fixtures/notes\\\"]\\n- `mode`: \\\"lines\\\"\\n\\nAfter I get the results, I will list the files and line numbers that matched.\"},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"results\\\":[{\\\"path\\\":\\\"spec/fixtures/notes/alpha.md\\\",\\\"line\\\":6,\\\"column\\\":19,\\\"text\\\":\\\"A line mentioning SALSIFY-9002 for the first time.\\\"},{\\\"path\\\":\\\"spec/fixtures/notes/alpha.md\\\",\\\"line\\\":10,\\\"column\\\":25,\\\"text\\\":\\\"Another line mentioning SALSIFY-9002, deliberately.\\\"},{\\\"path\\\":\\\"spec/fixtures/notes/beta.txt\\\",\\\"line\\\":3,\\\"column\\\":20,\\\"text\\\":\\\"This file mentions SALSIFY-9002 exactly once.\\\"}],\\\"summary\\\":{\\\"matches\\\":3,\\\"scanned\\\":2,\\\"files_scanned\\\":2,\\\"files_skipped\\\":0},\\\"stop_reason\\\":\\\"completed\\\"}\",\"tool_call_id\":\"mc_1789649810576_0\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"search_file_contents\",\"description\":\"Search file contents by regular expression. Binary files, files over 5000000 bytes and the usual noise directories (.git, node_modules, vendor, build) are skipped automatically. Bounded: check `truncated` and `notice`, because a short result may be a sample. Use mode \\\"paths\\\" first when the question is which files mention something — it is far cheaper than reading every matching line. All paths are relative to the workspace root; paths outside it are refused.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"pattern\": {\n      \"type\": \"string\",\n      \"description\": \"Regular expression to search for. Set fixed_string if you mean it literally.\"\n    },\n    \"paths\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Directories or files to search. Defaults to the workspace root.\"\n    },\n    \"mode\": {\n      \"type\": \"string\",\n      \"enum\": [\"lines\", \"paths\"],\n      \"description\": \"\\\"lines\\\" returns every matching line. \\\"paths\\\" returns each matching file once, with its first hit. Default \\\"lines\\\".\"\n    },\n    \"ignore_case\": {\n      \"type\": \"boolean\",\n      \"description\": \"Case-insensitive matching. Default false.\"\n    },\n    \"fixed_string\": {\n      \"type\": \"boolean\",\n      \"description\": \"Treat the pattern as a literal string, not a regex. Default false.\"\n    },\n    \"types\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Named file types to restrict to, e.g. \\\"cr\\\", \\\"py\\\", \\\"web\\\". Cheaper and less error-prone than hand-written globs.\"\n    },\n    \"include_globs\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Only search files matching these globs, tested against the name and the relative path.\"\n    },\n    \"exclude_globs\": {\n      \"type\": \"array\",\n      \"items\": { \"type\": \"string\" },\n      \"description\": \"Skip files matching these globs. Beats include_globs.\"\n    },\n    \"max_matches\": {\n      \"type\": \"integer\",\n      \"description\": \"Stop after this many matches, or files in \\\"paths\\\" mode. Default 200.\"\n    },\n    \"max_matches_per_file\": {\n      \"type\": \"integer\",\n      \"description\": \"Matches any one file may contribute, so a single noisy file cannot fill the result. Default 20.\"\n    },\n    \"max_depth\": {\n      \"type\": \"integer\",\n      \"description\": \"Do not descend below this depth. Default 25.\"\n    },\n    \"include_hidden\": {\n      \"type\": \"boolean\",\n      \"description\": \"Search dotfiles and dot-directories. Default false.\"\n    },\n    \"timeout_seconds\": {\n      \"type\": \"number\",\n      \"description\": \"Give up after this long. Default 10.0.\"\n    }\n  },\n  \"required\": [\"pattern\"]\n}}}]}",
+        "body_digest": "6a97a4e1b0616e2c8585af94b5e45c166f907734df3b7d1712dd00299a74de50"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Thu, 17 Sep 2026 12:56:53 GMT",
+          "Content-Length": "536"
+        },
+        "body": "{\"id\":\"chatcmpl-566\",\"object\":\"chat.completion\",\"created\":1789649813,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The following files and line numbers contain \\\"SALSIFY-9002\\\":\\n\\n*   `spec/fixtures/notes/alpha.md`: line 6\\n*   `spec/fixtures/notes/alpha.md`: line 10\\n*   `spec/fixtures/notes/beta.txt`: line 3\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":865,\"prompt_tokens_details\":{\"cached_tokens\":653},\"completion_tokens\":70,\"total_tokens\":935}}\n"
+      },
+      "recorded_at": "2026-09-17T12:56:53Z"
+    }
+  ]
+}
