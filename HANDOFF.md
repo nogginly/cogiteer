@@ -46,6 +46,9 @@ for real on every pass, and its result becomes part of the *next* request's
 body, which is what the recording is matched against. Three consequences, all
 of them already load-bearing:
 
+Recorded tool specs build their config through `ToolHarness`
+(`spec/support/tool_harness.cr`), which enforces the first two of these:
+
 1. **`reproducible_tools: true` in every recorded tool spec.** Without it a
    walk's `elapsed_ms` and a find result's `modified` differ on every run and
    the transcript never replays — not even on the machine that recorded it.
@@ -73,6 +76,11 @@ Other transcript traps, each of which has already bitten:
   the first resolved address where curl falls back, and macOS resolves
   `localhost` to `::1` first. The older specs still use `localhost`; leave them
   alone or their transcripts move.
+- **Hidden files stay out by default.** `find_files` and `search_file_contents`
+  skip dotfiles unless `include_hidden` is set, so a `.DS_Store` beside the
+  fixtures never reaches a body. A prompt that asks for hidden files, or a
+  model that sets it unprompted, would change that — and a `.gitignore` does
+  not help, because the walker does not read one.
 - **`normalize_body` is configured although nothing yet needs it.** No
   transcript so far carries a liaison-minted call id — Ollama and Anthropic
   both supply their own. It is not retroactive, so leave it.
@@ -82,25 +90,52 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**The remaining tools, one at a time.** `read_text_file` is covered end to end;
-the other four are offered but only `read_text_file` is exercised by a recorded
-spec. In rough order of usefulness: `search_file_contents`, `find_files`, then
-`write_text_file` and `text_replace`.
+**The two writers, one at a time.** `read_text_file`, `search_file_contents`
+and `find_files` each have a recorded spec. `write_text_file` and
+`text_replace` are offered but not yet exercised; `text_replace` first,
+because it needs existing content and so proves the scratch setup.
 
-Each is now one spec and one transcript, because the selection mechanism landed
-first. Three things to know before writing one:
+A writer changes files, and fixtures must not be edited, so each writer spec
+works on a copy. The copy's location is settled, and each part is load-bearing:
 
-1. **Scope the prompt to `spec/fixtures/`.** A search over the repository
-   returns results that change with every commit, and those results go into a
-   request body. `spec/fixtures/notes/` holds two files with a known token at
-   known lines, for exactly this.
-2. **Bound walks by work, not by clock.** `max_matches`, `max_depth` and
+1. **A fixed folder inside the repo, `tmp/tool_scratch/<id>/`**, gitignored by
+   `tmp*`. Not `Dir.tempdir`: the sandbox root is the working directory, so a
+   path outside the repo is refused, and a random name lands in the prompt, the
+   call's arguments and the result — a body that never replays.
+2. **`<id>` is the spec's transcript name.** One unique name, already required
+   to be unique; renaming either means re-recording anyway.
+3. **Delete and recreate the folder before the run, not only after.** A spec
+   that fails halfway leaves edited bytes behind, and the next run would send a
+   different body and fail with *No recorded interaction*, pointing at the
+   wrong thing. Removal in `ensure` is a courtesy; the reset first is the
+   guarantee.
+4. **Prompt with the relative path**, e.g. `tmp/tool_scratch/tools_text_replace/notes.md`.
+
+A helper for this belongs in `ToolHarness` beside `with_config`, written with
+the first writer spec rather than ahead of it.
+
+**What a writer spec asserts.** `fsutils` has its own tests, so do not re-test
+its semantics. What only this project can break is the path from the model's
+arguments to the disk:
+
+1. **The file's exact contents afterwards.** The only check that proves the
+   write landed where the sandbox root says. Tools run for real on every pass,
+   so this is never a stale assertion.
+2. **At least one successful result for the tool.** Proves the adapter passed
+   the arguments and the budget dispatched the call.
+3. **Never the model's prose.** It proves only what the model believes, and
+   varies by provider.
+
+Two things still to know before writing any tool spec:
+
+1. **Bound walks by work, not by clock.** `max_matches`, `max_depth` and
    `max_entries_scanned` truncate identically everywhere; `timeout_seconds`
    does not, and a walk that completes on one machine may not on another.
    `reproducible` cannot fix that and does not claim to.
-3. **Argument shapes differ between tools.** `find_files` takes `path` as an
-   array of strings where `read_text_file` takes one string. A prompt vague
-   about this produces a failed first call.
+2. **Spell out argument shapes in the prompt.** `find_files` and
+   `search_file_contents` take `paths` as an array of strings where
+   `read_text_file` takes one `path`. A prompt vague about this produces a
+   failed first call, which the specs tolerate but a transcript then carries.
 
 ## How to work on this
 
