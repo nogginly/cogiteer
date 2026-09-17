@@ -102,11 +102,6 @@ first. Three things to know before writing one:
    array of strings where `read_text_file` takes one string. A prompt vague
    about this produces a failed first call.
 
-Also outstanding: **`docs/DESIGN.md` has not caught up with tool selection.**
-Its `defaults` table is missing `tools` and `reproducible_tools`, and nothing
-records why an unclassified tool counts as writing — which is the decision most
-likely to look wrong to someone reading the table cold.
-
 ## How to work on this
 
 **The maintainer holds the toolchain and does all of the running.** Crystal, the

@@ -167,16 +167,23 @@ No key here describes where a request goes or what is asked of a model, which
 is why they are not on a server or a deployment. They describe what the CLI
 does while an answer is being got.
 
-Key             |Default|Flag                     |Means                                                 
-----------------|-------|-------------------------|------------------------------------------------------
-`streaming`     |`false`|`--stream`, `--no-stream`|Show the reply as it arrives                          
-`show_reasoning`|`false`|`--show-reasoning`       |Put reasoning deltas on stderr as they arrive         
-`max_tool_calls`|`50`   |`--max-tool-calls`       |Ceiling on tool calls in one turn; `0` offers no tools
+Key                 |Default|Flag                                             |Means                                                 
+--------------------|-------|-------------------------------------------------|------------------------------------------------------
+`streaming`         |`false`|`--stream`, `--no-stream`                        |Show the reply as it arrives                          
+`show_reasoning`    |`false`|`--show-reasoning`, `--hide-reasoning`           |Put reasoning deltas on stderr as they arrive         
+`max_tool_calls`    |`50`   |`--max-tool-calls`                               |Ceiling on tool calls in one turn; `0` offers no tools
+`tools`             |absent |`--tools`                                        |Which tools to offer; absent is all, `[]` is none     
+`reproducible_tools`|`false`|`--reproducible-tools`, `--no-reproducible-tools`|Omit when and where a tool call ran                   
 
 **Every key here pairs with a flag of the same name**, and that is the rule the
 block is held to rather than a coincidence. A key with no flag behind it is how
 a section like this turns into a junk drawer, and a key spelled differently
 from its flag is a translation table someone has to keep in step with `--help`.
+
+The rule runs one way. A flag needs no key, and `--readonly` has none: it
+exists to make a configured tool set safe for one run without editing the
+configuration, and a key would be that edit. `--id` and `--on` are the same
+shape — facts about one invocation, not about how the CLI behaves.
 
 The two flags default to false, which is what the CLI did before the block
 existed. `max_tool_calls` is the one key whose default is not the old
@@ -562,8 +569,8 @@ returns. Recorded so it is not rediscovered as a bug.
 ## Deliberately deferred, not forgotten
 
 - **Tool execution.** Built; see *Tools* below. What is still deferred from it:
-  a read-only mode, an operator-settable sandbox root, and a config key for the
-  message a refused call carries.
+  an operator-settable sandbox root, and a config key for the message a refused
+  call carries.
 
 ## Tools
 
@@ -712,6 +719,39 @@ flowchart TB
     classDef guard stroke:#ef6c00,stroke-width:3px
     class ZERO,LEFT guard
 ```
+
+### Choosing what is offered
+
+`tools` narrows the set, `--readonly` then drops anything that writes, and
+`--readonly` wins. An absent `tools` offers everything `fsutils` has, so a tool
+the toolkit gains arrives without a change here; `[]` offers nothing, which an
+operator can mean. A name the toolkit does not offer raises: a typo that
+silently dropped a tool would leave a model unable to do something, with
+nothing to read explaining why.
+
+Whether a tool writes is declared in `Workspace::CAPABILITIES`, because
+`FsUtils::Definition` says nothing about it. **A name missing from that table
+counts as writing.** This looks like an oversight and is not.
+
+Option                  |After `shards update` adds a tool                            
+------------------------|-------------------------------------------------------------
+Raise on an unknown name|The CLI will not start, for every command                    
+Count it as reading     |`--readonly` offers a tool that might write                  
+**Count it as writing** |Kept out of `--readonly`; offered to a run that asked for all
+
+Raising punishes the user for a decision the maintainer has not made yet.
+Counting it as reading fails open on the one flag whose whole promise is not
+failing open. Counting it as writing fails closed and keeps working.
+
+The decision still gets made, and the suite forces it: `workspace_spec.cr`
+asserts every definition is classified, so the update that introduces a tool
+fails this project's tests — which is when someone should decide what it is,
+rather than when a user meets it.
+
+`reproducible_tools` drops a walk's `elapsed_ms` and a find result's `modified`.
+Off by default, because an mtime is how a model notices a file changed under
+it; on wherever two runs of one prompt must agree, which is every recorded
+spec.
 
 ### Built per invocation, never memoised
 

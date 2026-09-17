@@ -18,13 +18,7 @@ mapper, an exporter or the archive format, it is not this file's.
 
 ## MUST FIX
 
-- **`docs/DESIGN.md` has not caught up with tool selection.** Its `defaults`
-  table is missing `tools` and `reproducible_tools`, and nothing records why an
-  unclassified tool counts as writing rather than raising. Cheap now: the
-  reasoning is fresh and the table is two rows short. Expensive later: the
-  unclassified-means-writing decision reads as an oversight to anyone finding
-  it cold, and the obvious "fix" — raising — turns a routine `shards update`
-  into a CLI that will not start.
+Nothing currently.
 
 ---
 
