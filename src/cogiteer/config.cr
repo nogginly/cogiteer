@@ -139,10 +139,15 @@ module Cogiteer
     getter? show_reasoning : Bool
     getter max_tool_calls : Int32
     getter? reproducible_tools : Bool
+    # Which tools to offer. Nil offers everything the toolkit has, so a tool it
+    # gains arrives without anyone editing a list here; an empty list offers
+    # none. The names are checked where the tools are known, not here.
+    getter tools : Array(String)?
 
     def initialize(@streaming : Bool = false, @show_reasoning : Bool = false,
                    @max_tool_calls : Int32 = DEFAULT_MAX_TOOL_CALLS,
-                   @reproducible_tools : Bool = false)
+                   @reproducible_tools : Bool = false,
+                   @tools : Array(String)? = nil)
       raise ConfigError.new("max_tool_calls is #{@max_tool_calls} — expected 0 or more") if @max_tool_calls < 0
     end
 
@@ -226,7 +231,27 @@ module Cogiteer
         show_reasoning: parse_flag(node, "show_reasoning"),
         max_tool_calls: parse_count(node, "max_tool_calls", Defaults::DEFAULT_MAX_TOOL_CALLS),
         reproducible_tools: parse_flag(node, "reproducible_tools"),
+        tools: parse_names(node, "tools"),
       )
+    end
+
+    # Absent means every tool; `[]` means none. A bare `tools:` is neither — it
+    # parses as null and would read as "all" while looking like "none", so it
+    # is rejected rather than guessed at.
+    private def self.parse_names(node : YAML::Any, key : String) : Array(String)?
+      field = node[key]?
+      return unless field
+
+      if field.raw.nil?
+        raise ConfigError.new(
+          "'defaults.#{key}' has no value — write a list of tool names, or '[]' to offer none")
+      end
+
+      list = field.as_a? ||
+             raise ConfigError.new("'defaults.#{key}' is #{field.raw.inspect} — expected a list of tool names")
+      list.map do |entry|
+        entry.as_s? || raise ConfigError.new("'defaults.#{key}' holds #{entry.raw.inspect} — expected a tool name")
+      end
     end
 
     # Absent means the built-in, not zero. Zero is a thing someone can ask for

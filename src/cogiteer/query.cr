@@ -55,11 +55,16 @@ module Cogiteer
             indicator : Progress? = nil,
             max_tool_calls : Int32 = 0,
             reproducible_tools : Bool = false,
+            tool_names : Array(String)? = nil,
+            readonly_tools : Bool = false,
             continuation : String = CONTINUATION) : {Liaison::MPSH::Message, Liaison::Capability::Report}
       session << Liaison::MPSH::Message.user(prompt)
 
       client = Liaison::Client.new(provider)
-      toolbox = max_tool_calls > 0 ? Tools::Workspace.toolbox(reproducible: reproducible_tools) : nil
+      toolbox = if max_tool_calls > 0
+                  Tools::Workspace.toolbox(names: tool_names, readonly: readonly_tools,
+                    reproducible: reproducible_tools)
+                end
       waiting = indicator.try(&.label)
       remaining = max_tool_calls
 

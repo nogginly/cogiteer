@@ -44,6 +44,15 @@ private def with_sandbox(max_tool_calls : Int32, &) : Nil
         model: #{MODEL}
     defaults:
       max_tool_calls: #{max_tool_calls}
+      # A tool result becomes part of the next request's body, and that body is
+      # what the transcript is matched against. Anything reporting when or
+      # where a call ran would differ on every run and the recording would
+      # never replay.
+      reproducible_tools: true
+      # Pinned, not inherited. Left to the built-in, every tool added to the
+      # toolkit would change the declared tool list, change the request body,
+      # and re-record every transcript here — including the paid ones.
+      tools: [read_text_file]
     YAML
 
   # See start_spec.cr's with_sandbox: $COGITEER_CONFIG / $COGITEER_HOME rather
