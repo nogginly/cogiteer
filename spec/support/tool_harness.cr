@@ -126,6 +126,16 @@ module ToolHarness
     session.messages.flat_map { |message| message.content.select(type) }
   end
 
+  # Each tool call paired with its result, asserting first that the run left
+  # one result per call. Index-aligned because the loop appends them in step,
+  # which is worth checking rather than assuming.
+  def self.exchanges(session : Liaison::MPSH::Session)
+    calls = blocks_of(session, Liaison::MPSH::ToolCallBlock)
+    results = blocks_of(session, Liaison::MPSH::ToolResultBlock)
+    results.size.should eq(calls.size)
+    calls.zip(results)
+  end
+
   # The concatenated text of a tool result.
   def self.text_of(result : Liaison::MPSH::ToolResultBlock) : String
     result.content.select(Liaison::MPSH::TextBlock).map(&.text).join

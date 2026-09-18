@@ -95,14 +95,24 @@ plus `write_text_file`'s two calling patterns as separate examples. Nothing in
 the tool work is outstanding. What follows is for whoever adds the sixth tool,
 or changes one of these.
 
-**Where a new tool spec starts.** Copy the nearest of:
+**Where a new spec starts.** Copy the nearest of:
 
-Tool pattern         |Spec                            |Shows                                        
+Pattern              |Spec                            |Shows                                        
 ---------------------|--------------------------------|---------------------------------------------
 Reads one path       |`tools_spec.cr`                 |The loop, the budget, `tool_choice: None`    
 Walks a folder       |`search_spec.cr`, `find_spec.cr`|Array arguments, sorted root-relative results
 Edits a file         |`replace_spec.cr`               |Scratch copies                               
 Creates or overwrites|`write_spec.cr`                 |Missing parents, and a boolean argument      
+A CLI flag           |`commands/tool_flags_spec.cr`   |A flag overriding a config that disagrees    
+
+**Every verb parses its own flags, so every verb is covered separately.**
+`start` and `continue` keep independent `OptionParser` blocks with overlapping
+but not identical sets, so a flag proven on one says nothing about the other —
+the split `streaming_spec.cr` already makes for `--stream`, and
+`tool_flags_spec.cr` and `continue_tool_flags_spec.cr` make for the tool flags.
+A flag spec is only worth recording if the config *disagrees* with it: the
+config offers readers and writers, the flag drops the writers. Otherwise a pass
+proves only that the config worked.
 
 **Writers work on a copy**, made by `ToolHarness.with_scratch`, because
 fixtures must not be edited. Each part of the copy's location is load-bearing:
@@ -137,8 +147,17 @@ from the model's arguments to the disk and back:
    the arguments and the budget dispatched the call. `write_spec.cr` goes one
    step further and checks `created`, which is the only evidence that a boolean
    argument survived the conversion in `arguments.cr`.
-3. **Never the model's prose.** It proves only what the model believes, and
-   varies by provider.
+3. **Never the model's prose, nor what it attempted.** Both are the model's
+   business, and a model that emits calls as text can name a tool it was never
+   offered — the local one does exactly that under `--readonly`: refused, it
+   reads instead and answers. Assert that such a call cannot *succeed*, not
+   that it was never made.
+
+**A refusal is addressed to the model, so its wording is asserted.**
+`Query::CONTINUATION` is checked verbatim wherever a budget runs out, because a
+model reading a failure it cannot tell from a tool error will retry it. The
+refusal for a tool that was never offered comes from `liaison`'s
+`Toolbox#dispatch`, and is that shard's to word and to test.
 
 A failed first call followed by a working retry is tolerated everywhere, and
 costs only an extra exchange in the transcript. Two ways to avoid one:

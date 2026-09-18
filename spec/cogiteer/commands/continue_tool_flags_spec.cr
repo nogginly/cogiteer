@@ -27,14 +27,6 @@ private def started : String
   Dir.children(Cogiteer::Sessions.folder).first
 end
 
-# Calls paired with their results, which the loop appends in step.
-private def exchanges(session : Liaison::MPSH::Session)
-  calls = ToolHarness.blocks_of(session, Liaison::MPSH::ToolCallBlock)
-  results = ToolHarness.blocks_of(session, Liaison::MPSH::ToolResultBlock)
-  results.size.should eq(calls.size)
-  calls.zip(results)
-end
-
 describe "cogiteer continue, with tool flags" do
   it "drops the writer the config offered when --readonly is given" do
     ToolHarness.with_config(ToolHarness.ollama(50, OFFERED)) do
@@ -50,7 +42,7 @@ describe "cogiteer continue, with tool flags" do
                                             "--readonly"])
         end
 
-        pairs = exchanges(ToolHarness.latest(id))
+        pairs = ToolHarness.exchanges(ToolHarness.latest(id))
         pairs.map { |call, _| call.name }.should contain("read_text_file")
         pairs.each { |call, result| result.is_error?.should be_true if call.name == "write_text_file" }
         File.exists?(target).should be_false
@@ -72,7 +64,7 @@ describe "cogiteer continue, with tool flags" do
                                             "--tools", "read_text_file"])
         end
 
-        pairs = exchanges(ToolHarness.latest(id))
+        pairs = ToolHarness.exchanges(ToolHarness.latest(id))
         pairs.map { |call, _| call.name }.should contain("read_text_file")
         pairs.each { |call, result| result.is_error?.should be_true if call.name == "write_text_file" }
         File.exists?(target).should be_false

@@ -36,16 +36,14 @@ describe "cogiteer start --readonly" do
         end
 
         session = ToolHarness.only_session
-        calls = ToolHarness.blocks_of(session, Liaison::MPSH::ToolCallBlock)
-        results = ToolHarness.blocks_of(session, Liaison::MPSH::ToolResultBlock)
-        writes = calls.each_with_index.select { |call, _| call.name == "write_text_file" }
+        pairs = ToolHarness.exchanges(session)
 
         # What the model *attempted* is not the subject. A model that emits
         # calls as text can name a tool it was never offered, and this one
         # does: it reads, tries to write, is refused, and answers in prose.
         # What `--readonly` promises is that such a call cannot succeed.
-        calls.map(&.name).should contain("read_text_file")
-        writes.each { |_, index| results[index].is_error?.should be_true }
+        pairs.map { |call, _| call.name }.should contain("read_text_file")
+        pairs.each { |call, result| result.is_error?.should be_true if call.name == "write_text_file" }
         File.exists?(target).should be_false
 
         Liaison::MPSH::Repair.sendable?(session).should be_true
@@ -68,14 +66,10 @@ describe "cogiteer start --readonly" do
                                          "--tools", "read_text_file"])
         end
 
-        session = ToolHarness.only_session
-        calls = ToolHarness.blocks_of(session, Liaison::MPSH::ToolCallBlock)
-        results = ToolHarness.blocks_of(session, Liaison::MPSH::ToolResultBlock)
+        pairs = ToolHarness.exchanges(ToolHarness.only_session)
 
-        calls.map(&.name).should contain("read_text_file")
-        calls.each_with_index do |call, index|
-          results[index].is_error?.should be_true if call.name == "write_text_file"
-        end
+        pairs.map { |call, _| call.name }.should contain("read_text_file")
+        pairs.each { |call, result| result.is_error?.should be_true if call.name == "write_text_file" }
         File.exists?(target).should be_false
       end
     end
