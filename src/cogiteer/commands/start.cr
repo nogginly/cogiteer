@@ -10,11 +10,28 @@ module Cogiteer::Commands
   module Start
     extend self
 
-    USAGE = "usage: cogiteer start <deployment> <prompt...> [--id <session-id>] " \
-            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning] " \
-            "[--max-tool-calls N] " \
-            "[--reproducible-tools|--no-reproducible-tools] " \
-            "[--tools a,b] [--readonly]"
+    USAGE = <<-USAGE
+      usage: cogiteer start <deployment> <prompt...> [options]
+
+      Opens a new session and takes the first turn on <deployment>, one of the
+      deployments named in cogiteer.yaml. The reply goes to stdout; the session
+      id and anything else goes to stderr.
+
+      Options:
+        --id SESSION_ID                name the session instead of generating one
+        --stream, --no-stream          show the reply as it arrives, or wait
+        --show-reasoning, --hide-reasoning
+                                       put the model's thinking on stderr
+        --tools a,b                    offer only these tools; empty offers none
+        --readonly                     drop every tool that writes
+        --max-tool-calls N             ceiling for this turn; 0 offers no tools
+        --reproducible-tools, --no-reproducible-tools
+                                       omit when and where a tool call ran
+        -h, --help                     show this message
+
+      Example:
+        cogiteer start ollama "Summarise README.md" --readonly
+      USAGE
 
     def run(args : Array(String)) : Nil
       chosen_id = nil.as(String?)
@@ -25,6 +42,11 @@ module Cogiteer::Commands
       tool_names = nil.as(Array(String)?)
       readonly_tools = false
       OptionParser.parse(args) do |parser|
+        parser.on("-h", "--help", "show this message") do
+          puts USAGE
+          exit 0
+        end
+        parser.invalid_option { |flag| raise ArgumentError.new("#{flag} is not an option here\n\n#{USAGE}") }
         parser.on("--id SESSION_ID", "name this session instead of taking a generated name") do |value|
           chosen_id = value
         end

@@ -18,13 +18,27 @@ module Cogiteer::Commands
   module Show
     extend self
 
-    USAGE = "usage: cogiteer show <session-id> [--snapshots] [--json]"
+    USAGE = <<-USAGE
+      usage: cogiteer show <session-id> [--snapshots] [--json]
+
+      Prints the conversation. Touches no network.
+
+      Options:
+        --snapshots                    list the turn history instead
+        --json                         print the stored form rather than prose
+        -h, --help                     show this message
+      USAGE
 
     def run(args : Array(String)) : Nil
       snapshots = false
       json = false
 
       OptionParser.parse(args) do |parser|
+        parser.on("-h", "--help", "show this message") do
+          puts USAGE
+          exit 0
+        end
+        parser.invalid_option { |flag| raise ArgumentError.new("#{flag} is not an option here\n\n#{USAGE}") }
         parser.on("--snapshots", "list the saved turns instead of the transcript") { snapshots = true }
         parser.on("--json", "emit the stored archive form") { json = true }
       end

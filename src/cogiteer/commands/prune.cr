@@ -17,12 +17,26 @@ module Cogiteer::Commands
   module Prune
     extend self
 
-    USAGE = "usage: cogiteer prune <session-id> --keep <n>"
+    USAGE = <<-USAGE
+      usage: cogiteer prune <session-id> --keep <n>
+
+      Drops all but the newest <n> snapshots of a session. The conversation
+      itself is untouched; only the turn history shrinks.
+
+      Options:
+        --keep N                       how many of the newest snapshots to keep
+        -h, --help                     show this message
+      USAGE
 
     def run(args : Array(String)) : Nil
       keep : Int32? = nil
 
       OptionParser.parse(args) do |parser|
+        parser.on("-h", "--help", "show this message") do
+          puts USAGE
+          exit 0
+        end
+        parser.invalid_option { |flag| raise ArgumentError.new("#{flag} is not an option here\n\n#{USAGE}") }
         parser.on("--keep N", "how many of the newest snapshots to keep") do |value|
           keep = value.to_i?
           raise ArgumentError.new("--keep wants a whole number, not #{value.inspect}") unless keep
