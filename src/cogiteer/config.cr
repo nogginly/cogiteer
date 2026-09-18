@@ -1,3 +1,4 @@
+require "socket_connect_fix"
 require "yaml"
 require "liaison"
 

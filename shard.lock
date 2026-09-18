@@ -12,6 +12,10 @@ shards:
     git: https://github.com/modelarmy/liaison.cr.git
     version: 0.2.2+git.commit.5afaaa08e36fbe25039011e48360f34bc3afd1b6
 
+  socket_connect_fix:
+    git: https://github.com/nogginly/socket_connect_fix.cr.git
+    version: 0.1.1
+
   wiretap:
     git: https://github.com/nogginly/wiretap.cr.git
     version: 0.4.2
