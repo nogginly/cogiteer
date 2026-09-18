@@ -18,7 +18,11 @@ module Cogiteer::Commands
   module Delete
     extend self
 
-    USAGE = "usage: cogiteer delete <session-id>"
+    USAGE = <<-USAGE
+      usage: cogiteer delete <session-id>
+
+      Removes the session folder and everything in it. Not reversible.
+      USAGE
 
     def run(args : Array(String)) : Nil
       id = args[0]?

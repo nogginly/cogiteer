@@ -10,11 +10,27 @@ module Cogiteer::Commands
   module Continue
     extend self
 
-    USAGE = "usage: cogiteer continue <session-id> <prompt...> [--on <deployment>] " \
-            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning] " \
-            "[--max-tool-calls N] " \
-            "[--reproducible-tools|--no-reproducible-tools] " \
-            "[--tools a,b] [--readonly]"
+    USAGE = <<-USAGE
+      usage: cogiteer continue <session-id> <prompt...> [options]
+
+      Takes another turn in an existing session, on whichever deployment last
+      answered. Use 'cogiteer list' to find a session id.
+
+      Options:
+        --on DEPLOYMENT                answer on a different deployment
+        --stream, --no-stream          show the reply as it arrives, or wait
+        --show-reasoning, --hide-reasoning
+                                       put the model's thinking on stderr
+        --tools a,b                    offer only these tools; empty offers none
+        --readonly                     drop every tool that writes
+        --max-tool-calls N             ceiling for this turn; 0 offers no tools
+        --reproducible-tools, --no-reproducible-tools
+                                       omit when and where a tool call ran
+        -h, --help                     show this message
+
+      Example:
+        cogiteer continue brisk-comet "And the second?" --on anthropic
+      USAGE
 
     def run(args : Array(String)) : Nil
       on_deployment = nil.as(String?)
@@ -25,6 +41,11 @@ module Cogiteer::Commands
       tool_names = nil.as(Array(String)?)
       readonly_tools = false
       OptionParser.parse(args) do |parser|
+        parser.on("-h", "--help", "show this message") do
+          puts USAGE
+          exit 0
+        end
+        parser.invalid_option { |flag| raise ArgumentError.new("#{flag} is not an option here\n\n#{USAGE}") }
         parser.on("--on DEPLOYMENT", "continue on a different deployment than this session last used") do |value|
           on_deployment = value
         end

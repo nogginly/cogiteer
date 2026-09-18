@@ -23,7 +23,12 @@ module Cogiteer::Commands
   module List
     extend self
 
-    USAGE = "usage: cogiteer list"
+    USAGE = <<-USAGE
+      usage: cogiteer list
+
+      Every session, newest first, with the deployment that last answered.
+      Touches no network.
+      USAGE
 
     PREVIEW_WIDTH = 48
 

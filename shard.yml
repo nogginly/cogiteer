@@ -1,5 +1,5 @@
 name: cogiteer
-version: 0.2.0
+version: 0.3.0
 license: MPL2
 
 crystal: ">= 1.19, < 2.0"
@@ -19,6 +19,11 @@ dependencies:
     github: modelarmy/liaison.cr
   fsutils:
     github: nogginly/fsutils.cr
+  socket_connect_fix:
+    # Need this to address a socket connection problem in Crystal
+    # associated with some OS updates; will remove when no longer needed.
+    github: nogginly/socket_connect_fix.cr
+    version: 0.1.1
 
 development_dependencies:
   ameba:
