@@ -90,13 +90,22 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**`write_text_file`, the last tool.** `read_text_file`,
-`search_file_contents`, `find_files` and `text_replace` each have a recorded
-spec. `spec/cogiteer/tools/replace_spec.cr` is the pattern to follow.
+**All five `fsutils` tools now have recorded end-to-end specs**, one per tool,
+plus `write_text_file`'s two calling patterns as separate examples. Nothing in
+the tool work is outstanding. What follows is for whoever adds the sixth tool,
+or changes one of these.
 
-A writer changes files, and fixtures must not be edited, so each writer spec
-works on a copy made by `ToolHarness.with_scratch`. The copy's location is
-settled, and each part is load-bearing:
+**Where a new tool spec starts.** Copy the nearest of:
+
+Tool pattern         |Spec                            |Shows                                        
+---------------------|--------------------------------|---------------------------------------------
+Reads one path       |`tools_spec.cr`                 |The loop, the budget, `tool_choice: None`    
+Walks a folder       |`search_spec.cr`, `find_spec.cr`|Array arguments, sorted root-relative results
+Edits a file         |`replace_spec.cr`               |Scratch copies                               
+Creates or overwrites|`write_spec.cr`                 |Missing parents, and a boolean argument      
+
+**Writers work on a copy**, made by `ToolHarness.with_scratch`, because
+fixtures must not be edited. Each part of the copy's location is load-bearing:
 
 1. **A fixed folder inside the repo, `tmp/tool_scratch/<id>/`**, gitignored by
    `tmp*`. Not `Dir.tempdir`: the sandbox root is the working directory, so a
@@ -109,27 +118,30 @@ settled, and each part is load-bearing:
    different body and fail with *No recorded interaction*, pointing at the
    wrong thing. Removal in `ensure` is a courtesy; the reset first is the
    guarantee.
-4. **Prompt with the relative path**, e.g. `tmp/tool_scratch/tools_text_replace/notes.md`.
+4. **Prompt with the relative path**, e.g. `tmp/tool_scratch/tools_text_replace/draft.md`.
 
-`spec/fixtures/editable/draft.md` is the fixture for edits. It holds one
-target of each kind — a unique line (used by the `text_replace` spec), a word
-repeated for `replace_all`, and a line meant to be deleted — so a new writer
-spec can pick its edit without a new fixture. Editing the original re-records
-every writer transcript.
+`spec/fixtures/editable/draft.md` is the fixture for edits. It holds one target
+of each kind — a unique line (used by `replace_spec.cr`), a word repeated for
+`replace_all`, and a line meant to be deleted — so a new writer spec can pick
+its edit without a new fixture. Editing the original re-records every writer
+transcript.
 
-**What a writer spec asserts.** `fsutils` has its own tests, so do not re-test
-its semantics. What only this project can break is the path from the model's
-arguments to the disk:
+**What a tool spec asserts.** `fsutils` and `liaison` have their own tests, so
+do not re-test their semantics. What only this project can break is the path
+from the model's arguments to the disk and back:
 
-1. **The file's exact contents afterwards.** The only check that proves the
-   write landed where the sandbox root says. Tools run for real on every pass,
-   so this is never a stale assertion.
+1. **The effect, at its source.** For a writer, the file's exact bytes
+   afterwards, plus the untouched original. For a reader, the tool's own
+   archived result. Tools run for real on every pass, so neither goes stale.
 2. **At least one successful result for the tool.** Proves the adapter passed
-   the arguments and the budget dispatched the call.
+   the arguments and the budget dispatched the call. `write_spec.cr` goes one
+   step further and checks `created`, which is the only evidence that a boolean
+   argument survived the conversion in `arguments.cr`.
 3. **Never the model's prose.** It proves only what the model believes, and
    varies by provider.
 
-Two things still to know before writing any tool spec:
+A failed first call followed by a working retry is tolerated everywhere, and
+costs only an extra exchange in the transcript. Two ways to avoid one:
 
 1. **Bound walks by work, not by clock.** `max_matches`, `max_depth` and
    `max_entries_scanned` truncate identically everywhere; `timeout_seconds`
@@ -137,8 +149,9 @@ Two things still to know before writing any tool spec:
    `reproducible` cannot fix that and does not claim to.
 2. **Spell out argument shapes in the prompt.** `find_files` and
    `search_file_contents` take `paths` as an array of strings where
-   `read_text_file` takes one `path`. A prompt vague about this produces a
-   failed first call, which the specs tolerate but a transcript then carries.
+   `read_text_file` and the writers take one `path`. A prompt vague about this
+   produces a failed first call, which the specs tolerate but a transcript then
+   carries.
 
 ## How to work on this
 
