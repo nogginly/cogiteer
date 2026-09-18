@@ -66,7 +66,7 @@ begin
     asked = rest[0]?
     if asked.nil?
       puts USAGE
-    elsif (text = VERB_USAGE[asked]?)
+    elsif text = VERB_USAGE[asked]?
       puts text
     else
       STDERR.puts "cogiteer: no such command: #{asked}"
