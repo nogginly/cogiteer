@@ -1,0 +1,56 @@
+{
+  "name": "flags_capped_continue",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "3248",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Say hello in one short sentence.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Hello.\"}],\"reasoning_content\":\"*   Target: Say \\\"hello\\\".\\n    *   Constraint 1: One sentence.\\n    *   Constraint 2: Short.\\n\\n    *   \\\"Hello.\\\"\\n    *   \\\"Hi there!\\\"\\n    *   \\\"Greetings.\\\"\\n    *   \\\"Hey!\\\"\\n\\n    *   \\\"Hello.\\\" is the simplest and most direct.\\n\\n    *   \\\"Hello.\\\"\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read tmp/tool_scratch/flags_capped_continue/draft.md and then read shard.yml. Use the tool for both; do not guess.\"}]}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}},{\"type\":\"function\",\"function\":{\"name\":\"write_text_file\",\"description\":\"Create a text file, or replace one in full. Writes exactly what you supply — no trailing newline is added and nothing is normalised. Replacing an existing file requires overwrite: true, and the call is refused otherwise so a file you did not know was there cannot be destroyed. Missing parent directories are created and reported back; an unexpected entry in parents_created usually means a mistyped path. For a partial change use text_replace instead. Content over 10485760 bytes is refused. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to write, relative to the workspace root.\"\n    },\n    \"content\": {\n      \"type\": \"string\",\n      \"description\": \"Full contents of the file. May be empty, which writes an empty file.\"\n    },\n    \"overwrite\": {\n      \"type\": \"boolean\",\n      \"description\": \"Permits replacing an existing file. Default false. Ignored when the path does not exist. Check `created` in the result: false means you replaced something.\"\n    }\n  },\n  \"required\": [\"path\", \"content\"]\n}}}]}",
+        "body_digest": "e29fc906f860f8577d46facb1091be1a58b6658c503d804385f949c63f1ae177"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 04:19:23 GMT",
+          "Content-Length": "524"
+        },
+        "body": "{\"id\":\"chatcmpl-84\",\"object\":\"chat.completion\",\"created\":1789705163,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_5bzuojiw\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"path\\\":\\\"tmp/tool_scratch/flags_capped_continue/draft.md\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":635,\"prompt_tokens_details\":{\"cached_tokens\":578},\"completion_tokens\":34,\"total_tokens\":669}}\n"
+      },
+      "recorded_at": "2026-09-18T04:19:23Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "4378",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Say hello in one short sentence.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Hello.\"}],\"reasoning_content\":\"*   Target: Say \\\"hello\\\".\\n    *   Constraint 1: One sentence.\\n    *   Constraint 2: Short.\\n\\n    *   \\\"Hello.\\\"\\n    *   \\\"Hi there!\\\"\\n    *   \\\"Greetings.\\\"\\n    *   \\\"Hey!\\\"\\n\\n    *   \\\"Hello.\\\" is the simplest and most direct.\\n\\n    *   \\\"Hello.\\\"\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read tmp/tool_scratch/flags_capped_continue/draft.md and then read shard.yml. Use the tool for both; do not guess.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789705163699_2\",\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"path\\\":\\\"tmp/tool_scratch/flags_capped_continue/draft.md\\\"}\"}}]},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"path\\\":\\\"tmp/tool_scratch/flags_capped_continue/draft.md\\\",\\\"content\\\":\\\"     1\\\\t# Draft\\\\n     2\\\\t\\\\n     3\\\\tStatus: draft\\\\n     4\\\\t\\\\n     5\\\\t**Do not edit this original.** The writer specs copy it into\\\\n     6\\\\t`tmp/tool_scratch/` and edit the copy. Its contents reach recorded request\\\\n     7\\\\tbodies, and the specs assert the copy's exact bytes afterwards.\\\\n     8\\\\t\\\\n     9\\\\tIt offers one edit of each kind: a unique line, a word repeated for\\\\n    10\\\\t`replace_all`, and a line that exists to be deleted.\\\\n    11\\\\t\\\\n    12\\\\t## Checklist\\\\n    13\\\\t\\\\n    14\\\\t- Paint the widget.\\\\n    15\\\\t- Label the widget.\\\\n    16\\\\t- Ship it.\\\\n    17\\\\t\\\\n    18\\\\t## Closing\\\\n    19\\\\t\\\\n    20\\\\tThis line exists to be deleted.\\\\n\\\",\\\"range\\\":{\\\"first_line\\\":1,\\\"last_line\\\":20},\\\"total_lines\\\":20}\",\"tool_call_id\":\"mc_1789705163699_2\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}},{\"type\":\"function\",\"function\":{\"name\":\"write_text_file\",\"description\":\"Create a text file, or replace one in full. Writes exactly what you supply — no trailing newline is added and nothing is normalised. Replacing an existing file requires overwrite: true, and the call is refused otherwise so a file you did not know was there cannot be destroyed. Missing parent directories are created and reported back; an unexpected entry in parents_created usually means a mistyped path. For a partial change use text_replace instead. Content over 10485760 bytes is refused. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to write, relative to the workspace root.\"\n    },\n    \"content\": {\n      \"type\": \"string\",\n      \"description\": \"Full contents of the file. May be empty, which writes an empty file.\"\n    },\n    \"overwrite\": {\n      \"type\": \"boolean\",\n      \"description\": \"Permits replacing an existing file. Default false. Ignored when the path does not exist. Check `created` in the result: false means you replaced something.\"\n    }\n  },\n  \"required\": [\"path\", \"content\"]\n}}}],\"tool_choice\":\"none\"}",
+        "body_digest": "8262383311df4283a83bf5e3769249116200410d4d7faa3021a6e057667e5290"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 04:19:24 GMT",
+          "Content-Length": "487"
+        },
+        "body": "{\"id\":\"chatcmpl-228\",\"object\":\"chat.completion\",\"created\":1789705164,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_9hnirpqo\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"path\\\":\\\"shard.yml\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":961,\"prompt_tokens_details\":{\"cached_tokens\":635},\"completion_tokens\":19,\"total_tokens\":980}}\n"
+      },
+      "recorded_at": "2026-09-18T04:19:24Z"
+    }
+  ]
+}

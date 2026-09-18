@@ -115,6 +115,12 @@ module ToolHarness
     Cogiteer::Sessions.latest(ids.first)
   end
 
+  # The newest snapshot of a session, for a spec whose subject is a second
+  # turn. `only_session` covers the one-turn case.
+  def self.latest(id : String) : Liaison::MPSH::Session
+    Cogiteer::Sessions.latest(id)
+  end
+
   # Every block of `type` across the session, in order.
   def self.blocks_of(session : Liaison::MPSH::Session, type : T.class) : Array(T) forall T
     session.messages.flat_map { |message| message.content.select(type) }

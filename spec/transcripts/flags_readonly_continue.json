@@ -1,0 +1,56 @@
+{
+  "name": "flags_readonly_continue",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "2185",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Say hello in one short sentence.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Hello.\"}],\"reasoning_content\":\"*   Target: Say \\\"hello\\\".\\n    *   Constraint 1: One sentence.\\n    *   Constraint 2: Short.\\n\\n    *   \\\"Hello.\\\"\\n    *   \\\"Hi there!\\\"\\n    *   \\\"Greetings.\\\"\\n    *   \\\"Hey!\\\"\\n\\n    *   \\\"Hello.\\\" is the simplest and most direct.\\n\\n    *   \\\"Hello.\\\"\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Write the first line of tmp/tool_scratch/flags_readonly_continue/draft.md into tmp/tool_scratch/flags_readonly_continue/summary.txt. If you cannot write, read tmp/tool_scratch/flags_readonly_continue/draft.md and tell me its first line instead.\"}]}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}}]}",
+        "body_digest": "d540bc318bdc3f043696ce80fa477c5d8cc08bb5fc378af5a1485e4511fe7009"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 04:19:17 GMT",
+          "Content-Length": "1108"
+        },
+        "body": "{\"id\":\"chatcmpl-765\",\"object\":\"chat.completion\",\"created\":1789705157,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"The user wants me to perform an operation involving two files: `tmp/tool_scratch/flags_readonly_continue/draft.md` and `tmp/tool_scratch/flags_readonly_continue/summary.txt`.\\n\\nSpecifically:\\n1. Read the first line of `tmp/tool_scratch/flags_readonly_continue/draft.md`.\\n2. Attempt to write that first line into `tmp/tool_scratch/flags_readonly_continue/summary.txt`.\\n3. If I cannot write, then just read the first line and tell the user.\\n\\nI first need to check if `tmp/tool_scratch/flags_readonly_continue/draft.md` exists and read its first line.\",\"tool_calls\":[{\"id\":\"call_eiv4mnt6\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"limit\\\":1,\\\"path\\\":\\\"tmp/tool_scratch/flags_readonly_continue/draft.md\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":421,\"prompt_tokens_details\":{\"cached_tokens\":326},\"completion_tokens\":190,\"total_tokens\":611}}\n"
+      },
+      "recorded_at": "2026-09-18T04:19:17Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "3358",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Say hello in one short sentence.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"Hello.\"}],\"reasoning_content\":\"*   Target: Say \\\"hello\\\".\\n    *   Constraint 1: One sentence.\\n    *   Constraint 2: Short.\\n\\n    *   \\\"Hello.\\\"\\n    *   \\\"Hi there!\\\"\\n    *   \\\"Greetings.\\\"\\n    *   \\\"Hey!\\\"\\n\\n    *   \\\"Hello.\\\" is the simplest and most direct.\\n\\n    *   \\\"Hello.\\\"\"},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Write the first line of tmp/tool_scratch/flags_readonly_continue/draft.md into tmp/tool_scratch/flags_readonly_continue/summary.txt. If you cannot write, read tmp/tool_scratch/flags_readonly_continue/draft.md and tell me its first line instead.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789705157853_0\",\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"limit\\\":1,\\\"path\\\":\\\"tmp/tool_scratch/flags_readonly_continue/draft.md\\\"}\"}}],\"reasoning_content\":\"The user wants me to perform an operation involving two files: `tmp/tool_scratch/flags_readonly_continue/draft.md` and `tmp/tool_scratch/flags_readonly_continue/summary.txt`.\\n\\nSpecifically:\\n1. Read the first line of `tmp/tool_scratch/flags_readonly_continue/draft.md`.\\n2. Attempt to write that first line into `tmp/tool_scratch/flags_readonly_continue/summary.txt`.\\n3. If I cannot write, then just read the first line and tell the user.\\n\\nI first need to check if `tmp/tool_scratch/flags_readonly_continue/draft.md` exists and read its first line.\"},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"truncated\\\":true,\\\"notice\\\":\\\"PARTIAL view: lines 1–1 of 20. Continue with `offset: 2`.\\\",\\\"path\\\":\\\"tmp/tool_scratch/flags_readonly_continue/draft.md\\\",\\\"content\\\":\\\"     1\\\\t# Draft\\\\n\\\",\\\"range\\\":{\\\"first_line\\\":1,\\\"last_line\\\":1},\\\"total_lines\\\":20,\\\"truncation_reason\\\":\\\"line_limit\\\"}\",\"tool_call_id\":\"mc_1789705157853_0\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}}]}",
+        "body_digest": "e1eb7f10676e4ae1617b34d7021f9155fbe545915941c7d8befd67626e2e07f2"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 04:19:18 GMT",
+          "Content-Length": "423"
+        },
+        "body": "{\"id\":\"chatcmpl-697\",\"object\":\"chat.completion\",\"created\":1789705158,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The first line of `tmp/tool_scratch/flags_readonly_continue/draft.md` is:\\n`# Draft`\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":566,\"prompt_tokens_details\":{\"cached_tokens\":421},\"completion_tokens\":29,\"total_tokens\":595}}\n"
+      },
+      "recorded_at": "2026-09-18T04:19:18Z"
+    }
+  ]
+}
