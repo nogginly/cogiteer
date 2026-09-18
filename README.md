@@ -23,15 +23,24 @@ tomorrow.
 ## Verbs
 
 ```
-cogiteer start <deployment> <prompt...> [--id <session-id>] [--stream|--no-stream]
-                                        [--show-reasoning|--hide-reasoning]
-cogiteer continue <session-id> <prompt...> [--on <deployment>] [--stream|--no-stream]
-                                           [--show-reasoning|--hide-reasoning]
+cogiteer start <deployment> <prompt...> [--id <session-id>] [tool flags] [display flags]
+cogiteer continue <session-id> <prompt...> [--on <deployment>] [tool flags] [display flags]
 cogiteer list
 cogiteer show <session-id> [--snapshots] [--json]
 cogiteer prune <session-id> --keep <n>
 cogiteer delete <session-id>
 ```
+
+Verb                   |Does                                                       
+-----------------------|-----------------------------------------------------------
+`start <deployment>`   |Opens a session and takes the first turn on that deployment
+`continue <session-id>`|Takes another turn, on whichever deployment last answered  
+`list`                 |Every session, newest first                                
+`show <session-id>`    |The conversation; `--snapshots` for the turn history       
+`prune <session-id>`   |Drops all but the newest `--keep <n>` snapshots            
+`delete <session-id>`  |Removes the session folder                                 
+
+`list` and `show` touch no network at all.
 
 ```console
 $ cogiteer start ollama "Name three things Vienna is known for."
@@ -50,6 +59,61 @@ want to switch.
 The reply is the only thing on stdout. Session ids, warnings and reasoning all
 go to stderr, so `cogiteer start ... > answer.txt` gets an answer and nothing
 else.
+
+### Flags on `start` and `continue`
+
+Both verbs take the same display and tool flags, and each overrides the
+matching key under `defaults` for that one run.
+
+Flag                                  |Does                                        
+--------------------------------------|--------------------------------------------
+`--stream`, `--no-stream`             |Show the reply as it arrives, or wait for it
+`--show-reasoning`, `--hide-reasoning`|Put the model's thinking on stderr          
+`--tools <a,b>`                       |Offer only these tools; empty offers none   
+`--readonly`                          |Drop every tool that writes                 
+`--max-tool-calls <n>`                |Ceiling for this turn; `0` offers no tools  
+`--reproducible-tools`, `--no-…`      |Omit when and where a tool call ran         
+
+`start` also takes `--id <session-id>` to name the session instead of taking a
+generated one; `continue` takes `--on <deployment>` to switch deployment.
+
+## Tools
+
+A turn can read and edit files. The CLI offers the [`fsutils`][fsutils]
+filesystem toolkit — `read_text_file`, `find_files`, `search_file_contents`,
+`write_text_file` and `text_replace` — rooted at the directory you ran it from,
+runs whatever the model calls, and feeds the results back until it answers.
+
+```console
+$ cogiteer start ollama "Which spec covers the tool budget? Read before you answer." --readonly
+Session: candid-otter
+spec/cogiteer/tools/tools_spec.cr — its second example caps the run at one call.
+```
+
+The loop, and where each control bites:
+
+```mermaid
+flowchart TD
+    P[Prompt] --> R[Ask the deployment]
+    R --> C{Tool calls in the reply?}
+    C -- no --> A[Answer]
+    C -- yes --> B{Budget left?}
+    B -- yes --> X[Run them in the sandbox]
+    X --> R
+    B -- no --> F[Refuse, and ask for a closing summary]
+    F --> A
+```
+
+- **The sandbox is the working directory.** Every path a model supplies is
+  resolved against it and compared, so `..` and symlinks cannot launder a path
+  out of the tree. Nothing moves the root; the tools are for the project you
+  are standing in.
+- **The budget counts calls, not rounds.** Once `max_tool_calls` is spent the
+  remaining calls come back refused, with an instruction to summarise and stop,
+  and the turn ends in prose rather than mid-task. `0` offers no tools at all.
+- **`tools` decides what is on the table, `--readonly` takes the writers off
+  it.** `--readonly` wins over anything `tools` asked for, which is the point:
+  it makes a configured set safe for one run without editing the file.
 
 ## Configuration
 
@@ -79,7 +143,13 @@ deployments:
 defaults:
   streaming: false
   show_reasoning: false
+  max_tool_calls: 50
+  reproducible_tools: false
+  # tools: [read_text_file, find_files]   # absent offers every tool
 ```
+
+Every key under `defaults` has a flag of the same name, so anything set here can
+be overridden for one run.
 
 Sessions are stored under `$COGITEER_HOME`, else `./.cogiteer` if it exists,
 else `~/.cogiteer` — one folder per session, one snapshot per turn.
@@ -98,12 +168,13 @@ Puts `cogiteer` in `bin/`. Requires Crystal 1.19 or newer.
 
 ## Documentation
 
-Document                          |Holds                                          
-----------------------------------|-----------------------------------------------
-[docs/DESIGN.md](./docs/DESIGN.md)|Config, session storage, verb grammar, and why 
-[SCOPE.md](./SCOPE.md)            |The worklist: open questions, and their traps  
-[HANDOFF.md](./HANDOFF.md)        |Where things stand and what is next            
-[`liaison`][liaison]              |The shard underneath: protocols, MPSH, handoffs
+Document                          |Holds                                                  
+----------------------------------|-------------------------------------------------------
+[docs/DESIGN.md](./docs/DESIGN.md)|Config, session storage, verb grammar, and why         
+[SCOPE.md](./SCOPE.md)            |The worklist: open questions, and their traps          
+[HANDOFF.md](./HANDOFF.md)        |Where things stand and what is next                    
+[`liaison`][liaison]              |The shard underneath: protocols, MPSH, handoffs        
+[`fsutils`][fsutils]              |The filesystem toolkit: what each tool does and refuses
 
 ## Contributions, by invitation!
 
@@ -117,3 +188,4 @@ Document                          |Holds
 MPL-2.0. See [LICENSE](./LICENSE).
 
 [liaison]: https://github.com/ModelArmy/liaison.cr
+[fsutils]: https://github.com/nogginly/fsutils.cr
