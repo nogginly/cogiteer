@@ -1,0 +1,81 @@
+{
+  "name": "flags_tools_start",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "1736",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Write the first line of tmp/tool_scratch/flags_tools_start/draft.md into tmp/tool_scratch/flags_tools_start/summary.txt. If you cannot write, read tmp/tool_scratch/flags_tools_start/draft.md and tell me its first line instead.\"}]}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}}]}",
+        "body_digest": "acb7d3e001e029a3ddb849a8d7d5b2413458fde2511c9f39ce6e8de137cf812d"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 03:31:56 GMT",
+          "Content-Length": "1279"
+        },
+        "body": "{\"id\":\"chatcmpl-440\",\"object\":\"chat.completion\",\"created\":1789702316,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"The user wants to perform a file operation: copy the first line of `tmp/tool_scratch/flags_tools_start/draft.md` into `tmp/tool_scratch/flags_tools_start/summary.txt`.\\nIf writing is not possible (meaning I don't have a tool to write files, which I don't, I only have `read_text_file`, `list_files`, `search_file_contents`, etc.), I should read the file and tell the user the first line.\\n\\nWait, do I have a write tool?\\nLooking at the available tools: `list_files`, `search_file_contents`, `read_text_file`.\\nI do *not* have a tool to write to files.\\n\\nTherefore, I should:\\n1. Read `tmp/tool_scratch/flags_tools_start/draft.md`.\\n2. Extract the first line.\\n3. Tell the user the first line.\\n\\nLet's start by reading the file.\",\"tool_calls\":[{\"id\":\"call_jxcab1el\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"limit\\\":1,\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/draft.md\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":402,\"prompt_tokens_details\":{\"cached_tokens\":344},\"completion_tokens\":254,\"total_tokens\":656}}\n"
+      },
+      "recorded_at": "2026-09-18T03:31:56Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "3074",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Write the first line of tmp/tool_scratch/flags_tools_start/draft.md into tmp/tool_scratch/flags_tools_start/summary.txt. If you cannot write, read tmp/tool_scratch/flags_tools_start/draft.md and tell me its first line instead.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789702316809_2\",\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"limit\\\":1,\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/draft.md\\\"}\"}}],\"reasoning_content\":\"The user wants to perform a file operation: copy the first line of `tmp/tool_scratch/flags_tools_start/draft.md` into `tmp/tool_scratch/flags_tools_start/summary.txt`.\\nIf writing is not possible (meaning I don't have a tool to write files, which I don't, I only have `read_text_file`, `list_files`, `search_file_contents`, etc.), I should read the file and tell the user the first line.\\n\\nWait, do I have a write tool?\\nLooking at the available tools: `list_files`, `search_file_contents`, `read_text_file`.\\nI do *not* have a tool to write to files.\\n\\nTherefore, I should:\\n1. Read `tmp/tool_scratch/flags_tools_start/draft.md`.\\n2. Extract the first line.\\n3. Tell the user the first line.\\n\\nLet's start by reading the file.\"},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"truncated\\\":true,\\\"notice\\\":\\\"PARTIAL view: lines 1–1 of 20. Continue with `offset: 2`.\\\",\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/draft.md\\\",\\\"content\\\":\\\"     1\\\\t# Draft\\\\n\\\",\\\"range\\\":{\\\"first_line\\\":1,\\\"last_line\\\":1},\\\"total_lines\\\":20,\\\"truncation_reason\\\":\\\"line_limit\\\"}\",\"tool_call_id\":\"mc_1789702316809_2\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}}]}",
+        "body_digest": "a193cf6cc3c9c1889ff063f992e1a0d9ae0730d8cff1bc12a023e3245eec7db7"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 03:31:57 GMT",
+          "Content-Length": "546"
+        },
+        "body": "{\"id\":\"chatcmpl-546\",\"object\":\"chat.completion\",\"created\":1789702317,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"id\":\"call_rzgl3xjv\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"write_text_file\",\"arguments\":\"{\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/summary.txt\\\",\\\"text\\\":\\\"# Draft\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":547,\"prompt_tokens_details\":{\"cached_tokens\":402},\"completion_tokens\":38,\"total_tokens\":585}}\n"
+      },
+      "recorded_at": "2026-09-18T03:31:57Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "3413",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Write the first line of tmp/tool_scratch/flags_tools_start/draft.md into tmp/tool_scratch/flags_tools_start/summary.txt. If you cannot write, read tmp/tool_scratch/flags_tools_start/draft.md and tell me its first line instead.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789702316809_2\",\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"arguments\":\"{\\\"limit\\\":1,\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/draft.md\\\"}\"}}],\"reasoning_content\":\"The user wants to perform a file operation: copy the first line of `tmp/tool_scratch/flags_tools_start/draft.md` into `tmp/tool_scratch/flags_tools_start/summary.txt`.\\nIf writing is not possible (meaning I don't have a tool to write files, which I don't, I only have `read_text_file`, `list_files`, `search_file_contents`, etc.), I should read the file and tell the user the first line.\\n\\nWait, do I have a write tool?\\nLooking at the available tools: `list_files`, `search_file_contents`, `read_text_file`.\\nI do *not* have a tool to write to files.\\n\\nTherefore, I should:\\n1. Read `tmp/tool_scratch/flags_tools_start/draft.md`.\\n2. Extract the first line.\\n3. Tell the user the first line.\\n\\nLet's start by reading the file.\"},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"truncated\\\":true,\\\"notice\\\":\\\"PARTIAL view: lines 1–1 of 20. Continue with `offset: 2`.\\\",\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/draft.md\\\",\\\"content\\\":\\\"     1\\\\t# Draft\\\\n\\\",\\\"range\\\":{\\\"first_line\\\":1,\\\"last_line\\\":1},\\\"total_lines\\\":20,\\\"truncation_reason\\\":\\\"line_limit\\\"}\",\"tool_call_id\":\"mc_1789702316809_2\"},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789702317783_3\",\"type\":\"function\",\"function\":{\"name\":\"write_text_file\",\"arguments\":\"{\\\"path\\\":\\\"tmp/tool_scratch/flags_tools_start/summary.txt\\\",\\\"text\\\":\\\"# Draft\\\"}\"}}]},{\"role\":\"tool\",\"content\":\"no tool named write_text_file is available\",\"tool_call_id\":\"mc_1789702317783_3\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}}]}",
+        "body_digest": "51b8af9587bcc6662c8dfaef07f438febe18c5b99ceb1312fa38c9e4da167638"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 03:32:05 GMT",
+          "Content-Length": "1902"
+        },
+        "body": "{\"id\":\"chatcmpl-959\",\"object\":\"chat.completion\",\"created\":1789702325,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The first line of `tmp/tool_scratch/flags_tools_start/draft.md` is:\\n`# Draft`\",\"reasoning\":\"The user wants me to write the first line of `tmp/tool_scratch/flags_tools_start/draft.md` into `tmp/tool_scratch/flags_tools_start/summary.txt`.\\nI attempted to use `write_text_file`, but it returned an error saying no tool named `write_text_file` is available.\\nI should check the available tools to see if there's another tool I can use for writing.\\nLooking at the available tools provides `write_file`, but not `write_text_file`.\\nWait, I should check the tool definitions.\\n\\nActually, looking at the previous turns:\\nI attempted `write_text_file` and failed.\\nI should check for `write_file` or any other write tool.\\nLooking at the tool definitions (mental check of what I *actually* have):\\nI have `read_text_file`.\\nI don't see a `write_text_file` in the provided declarations. I see `read_text_file` and `search_file_contents`.\\n\\nLet me double check the tools available to me.\\nI'll try to see if `write_file` exists.\\nWait, I don't even have a list of all tools in the prompt? Oh, I should check what's available.\\nActually, I see `read_text_file` and `search_file_contents` in the declaration provided in the last turn (although it's just one tool).\\nActually, the user says \\\"If you cannot write, read tmp/tool_scratch/flags_tools_start/draft.md and tell me its first line instead.\\\"\\n\\nI have already read the file: `tmp/tool_scratch/flags_tools_start/draft.md`.\\nThe first line is `# Draft`.\\nSince I cannot write, I will tell the user the first line.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":609,\"prompt_tokens_details\":{\"cached_tokens\":544},\"completion_tokens\":433,\"total_tokens\":1042}}\n"
+      },
+      "recorded_at": "2026-09-18T03:32:05Z"
+    }
+  ]
+}

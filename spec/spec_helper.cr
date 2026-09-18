@@ -11,7 +11,8 @@ Wiretap.configure do |c|
   # `:once` locally, so a new live spec records itself. `:none` in CI, so a
   # missing transcript fails the build instead of quietly reaching for the
   # network — which on the paid endpoints would also be a bill.
-  c.record_mode = ENV["CI"]? ? :none : :once
+  never_record = ENV["CI"]? || ENV["RECORD"]?.try(&.!=("1"))
+  c.record_mode = never_record ? :none : :once
 
   # Minted call identifiers carry a timestamp and a process-wide counter —
   # `mc_<epoch-ms>_<counter>` — so the same body can never digest identically
