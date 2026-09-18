@@ -1,0 +1,31 @@
+{
+  "name": "tools_disabled",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "163",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is the tallest mountain on Earth? Answer in one short sentence.\"}]}]}",
+        "body_digest": "9d7beae77fe24f5cfbc99dc777763938604d7ec09048a73851db7c08e6b925a6"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Wed, 16 Sep 2026 05:18:35 GMT",
+          "Content-Length": "920"
+        },
+        "body": "{\"id\":\"chatcmpl-918\",\"object\":\"chat.completion\",\"created\":1789535915,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Mount Everest is the tallest mountain on Earth.\",\"reasoning\":\"*   Question: \\\"What is the tallest mountain on Earth?\\\"\\n    *   Constraint: \\\"Answer in one short sentence.\\\"\\n\\n    *   Mount Everest is generally recognized as the tallest mountain on Earth (above sea level).\\n\\n    *   Option 1: Mount Everest is the tallest mountain on Earth.\\n    *   Option 2: The tallest mountain on Earth is Mount Everest.\\n\\n    *   \\\"Mount Everest is the tallest mountain on Earth.\\\" is direct and meets the \\\"one short sentence\\\" constraint.\\n\\n    *   One sentence? Yes.\\n    *   Short? Yes.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":30,\"prompt_tokens_details\":{\"cached_tokens\":6},\"completion_tokens\":136,\"total_tokens\":166}}\n"
+      },
+      "recorded_at": "2026-09-16T05:18:35Z"
+    }
+  ]
+}

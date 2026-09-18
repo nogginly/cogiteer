@@ -11,12 +11,19 @@ module Cogiteer::Commands
     extend self
 
     USAGE = "usage: cogiteer continue <session-id> <prompt...> [--on <deployment>] " \
-            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning]"
+            "[--stream|--no-stream] [--show-reasoning|--hide-reasoning] " \
+            "[--max-tool-calls N] " \
+            "[--reproducible-tools|--no-reproducible-tools] " \
+            "[--tools a,b] [--readonly]"
 
     def run(args : Array(String)) : Nil
       on_deployment = nil.as(String?)
       stream_flag = nil.as(Bool?)
       show_reasoning = nil.as(Bool?)
+      max_tool_calls = nil.as(Int32?)
+      reproducible_tools = nil.as(Bool?)
+      tool_names = nil.as(Array(String)?)
+      readonly_tools = false
       OptionParser.parse(args) do |parser|
         parser.on("--on DEPLOYMENT", "continue on a different deployment than this session last used") do |value|
           on_deployment = value
@@ -25,6 +32,16 @@ module Cogiteer::Commands
         parser.on("--no-stream", "wait for the whole reply") { stream_flag = false }
         parser.on("--show-reasoning", "put the model's thinking on stderr as it arrives") { show_reasoning = true }
         parser.on("--hide-reasoning", "keep the model's thinking off the terminal") { show_reasoning = false }
+        parser.on("--tools NAMES", "offer only these tools, comma-separated; empty offers none") do |value|
+          tool_names = value.split(',').map(&.strip).reject(&.empty?)
+        end
+        parser.on("--readonly", "drop any tool that writes, whatever else was asked for") { readonly_tools = true }
+        parser.on("--reproducible-tools", "omit when and where a tool call ran") { reproducible_tools = true }
+        parser.on("--no-reproducible-tools", "report when and where a tool call ran") { reproducible_tools = false }
+        parser.on("--max-tool-calls N", "ceiling on tool calls for this turn; 0 offers no tools") do |value|
+          max_tool_calls = value.to_i? ||
+                           raise ArgumentError.new("--max-tool-calls is #{value.inspect} — expected a whole number")
+        end
       end
 
       session_id, prompt = parse_positional(args)
@@ -49,10 +66,21 @@ module Cogiteer::Commands
       Output.repaired_on_load(session_id) if Liaison::MPSH::Repair.repair!(session)
       display = Display.resolve(config.defaults, stream_flag, show_reasoning, Output.stream)
 
+      # Copied out of the closured flag before it is tested: OptionParser holds
+      # it, so it never narrows out of `Int32?` however it is written.
+      requested_calls = max_tool_calls
+      tool_calls = requested_calls || config.defaults.max_tool_calls
+      requested_reproducible = reproducible_tools
+      reproducible = requested_reproducible.nil? ? config.defaults.reproducible_tools? : requested_reproducible
+      requested_tools = tool_names
+      tools = requested_tools || config.defaults.tools
+
       reply, report = Progress.while_waiting("waiting on #{deployment_name}", Output.error_stream) do |ticker|
         Query.run(provider, d.model, session, prompt,
           reasoning: d.reasoning, retention: d.reasoning_retention,
-          display: display, indicator: ticker)
+          display: display, indicator: ticker,
+          max_tool_calls: tool_calls, reproducible_tools: reproducible,
+          tool_names: tools, readonly_tools: readonly_tools)
       end
       Sessions.snapshot(session_id, session, deployment_name)
 

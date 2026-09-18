@@ -8,10 +8,15 @@ require "liaison"
 Wiretap.configure do |c|
   c.transcript_dir = "spec/transcripts"
 
-  # `:once` locally, so a new live spec records itself. `:none` in CI, so a
-  # missing transcript fails the build instead of quietly reaching for the
-  # network — which on the paid endpoints would also be a bill.
-  c.record_mode = ENV["CI"]? ? :none : :once
+  # `:once` only under `RECORD=1`, and never in CI. Otherwise a missing
+  # transcript fails the run instead of quietly reaching for the network —
+  # which on the paid endpoints would also be a bill.
+  #
+  # Compared rather than `try`ed: `ENV["RECORD"]?.try` yields nil when the
+  # variable is unset, which is falsy, which would record on exactly the plain
+  # run this is meant to protect.
+  never_record = ENV["CI"]? || ENV["RECORD"]? != "1"
+  c.record_mode = never_record ? :none : :once
 
   # Minted call identifiers carry a timestamp and a process-wide counter —
   # `mc_<epoch-ms>_<counter>` — so the same body can never digest identically

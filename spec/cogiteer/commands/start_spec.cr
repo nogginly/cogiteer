@@ -25,6 +25,11 @@ private def with_sandbox(&) : Nil
       ollama:
         server: ollama
         model: #{MODEL}
+    defaults:
+      # These specs are about starting and continuing a turn, not about tools.
+      # Left unset, the built-in ceiling would declare tools on every request
+      # here and change the body each transcript was recorded against.
+      max_tool_calls: 0
     YAML
 
   # $COGITEER_CONFIG / $COGITEER_HOME, not Dir.cd and not relying on an

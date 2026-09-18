@@ -1,0 +1,108 @@
+{
+  "name": "anthropic_tools_read_file",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "headers": {
+          "content-type": "application/json",
+          "anthropic-version": "2023-06-01",
+          "x-api-key": "[FILTERED]",
+          "Content-Length": "1601",
+          "Host": "api.anthropic.com",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"claude-haiku-4-5\",\"max_tokens\":4096,\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read spec/fixtures/tool_target.md and tell me the marker line it contains. Use the tool; do not guess.\"}]}],\"tools\":[{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"input_schema\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}]}",
+        "body_digest": "fbd117205c31dc1e3d4ab70daf8114049d63ee16c0499fc6171cedc01b60b8ab"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Date": "Wed, 16 Sep 2026 06:05:01 GMT",
+          "Content-Type": "application/json",
+          "Transfer-Encoding": "chunked",
+          "Connection": "keep-alive",
+          "anthropic-ratelimit-input-tokens-limit": "500000",
+          "anthropic-ratelimit-input-tokens-remaining": "500000",
+          "anthropic-ratelimit-input-tokens-reset": "2026-09-16T06:05:01Z",
+          "anthropic-ratelimit-output-tokens-limit": "80000",
+          "anthropic-ratelimit-output-tokens-remaining": "80000",
+          "anthropic-ratelimit-output-tokens-reset": "2026-09-16T06:05:01Z",
+          "anthropic-ratelimit-requests-limit": "1000",
+          "anthropic-ratelimit-requests-remaining": "999",
+          "anthropic-ratelimit-requests-reset": "2026-09-16T06:05:00Z",
+          "anthropic-ratelimit-tokens-limit": "580000",
+          "anthropic-ratelimit-tokens-remaining": "580000",
+          "anthropic-ratelimit-tokens-reset": "2026-09-16T06:05:01Z",
+          "Server": "cloudflare",
+          "request-id": "req_011Cf6camPrsLSYQEt9jsRWy",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "anthropic-organization-id": "73a57cec-8684-4a17-8a8a-236663eb1dd3",
+          "anthropic-workspace-id": "wrkspc_01TZaSJ9Q4GT9s3KXaMsNH6P",
+          "traceresponse": "00-0f555e4559bac5c7ee75f96a13835dfd-b4256360a6fee6d9-01",
+          "vary": "Accept-Encoding",
+          "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+          "cf-cache-status": "DYNAMIC",
+          "X-Robots-Tag": "none",
+          "CF-RAY": "a3bdad4d1e381801-YUL"
+        },
+        "body": "{\"model\":\"claude-haiku-4-5-20251001\",\"id\":\"msg_011Cf6canNQSkiZNjeV9paNE\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_01Dbi29tsyugfQNxdzDYA2ZH\",\"name\":\"read_text_file\",\"input\":{\"path\":\"spec/fixtures/tool_target.md\"},\"caller\":{\"type\":\"direct\"}}],\"container\":null,\"stop_reason\":\"tool_use\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":858,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":64,\"service_tier\":\"standard\",\"inference_geo\":\"not_available\"}}"
+      },
+      "recorded_at": "2026-09-16T06:05:01Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "headers": {
+          "content-type": "application/json",
+          "anthropic-version": "2023-06-01",
+          "x-api-key": "[FILTERED]",
+          "Content-Length": "2482",
+          "Host": "api.anthropic.com",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"claude-haiku-4-5\",\"max_tokens\":4096,\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Read spec/fixtures/tool_target.md and tell me the marker line it contains. Use the tool; do not guess.\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"mc_1789538701606_0\",\"name\":\"read_text_file\",\"input\":{\"path\":\"spec/fixtures/tool_target.md\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"mc_1789538701606_0\",\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"path\\\":\\\"spec/fixtures/tool_target.md\\\",\\\"content\\\":\\\"     1\\\\t# Tool target\\\\n     2\\\\t\\\\n     3\\\\tRead by `spec/cogiteer/commands/tools_spec.cr` through `read_text_file`.\\\\n     4\\\\t\\\\n     5\\\\t**Do not edit this file.** Its contents become part of the tool result, which\\\\n     6\\\\tbecomes part of the next request's body, which is what Wiretap digests. Change\\\\n     7\\\\ta word here and the tool transcripts stop replaying and re-record instead.\\\\n     8\\\\t\\\\n     9\\\\tThe marker line the spec looks for: PARSNIP-4417.\\\\n\\\",\\\"range\\\":{\\\"first_line\\\":1,\\\"last_line\\\":9},\\\"total_lines\\\":9}\"}]}]}],\"tools\":[{\"name\":\"read_text_file\",\"description\":\"Read a text file, whole or by line range. Output is line-numbered by default so you can cite regions back to search_file_contents or a follow-up read without recounting. Check `truncated`: a long file returns its first page plus a notice telling you how to continue. `total_lines` is always the file's real length, so you can tell how much you have not seen. A page is capped at 262144 bytes however many lines you ask for, and files over 104857600 bytes are refused outright. All paths are relative to the workspace root.\",\"input_schema\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"path\": {\n      \"type\": \"string\",\n      \"description\": \"File to read, relative to the workspace root.\"\n    },\n    \"offset\": {\n      \"type\": \"integer\",\n      \"description\": \"First line to return, 1-based, matching the numbering in the output. Omit to start at the beginning.\"\n    },\n    \"limit\": {\n      \"type\": \"integer\",\n      \"description\": \"Maximum lines to return. Omit for the default of 2000. Note: when you give an explicit offset or limit and the range is too large to return, the call fails rather than silently returning less.\"\n    },\n    \"line_numbers\": {\n      \"type\": \"boolean\",\n      \"description\": \"Prefix each line with its number. Default true. Set false only when you need the file's exact bytes.\"\n    }\n  },\n  \"required\": [\"path\"]\n}}]}",
+        "body_digest": "5c9a8aba4eb98810ec42ac437ba704e39a36cebffaf8ea8a0550dc1026a6c495"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Date": "Wed, 16 Sep 2026 06:05:02 GMT",
+          "Content-Type": "application/json",
+          "Transfer-Encoding": "chunked",
+          "Connection": "keep-alive",
+          "anthropic-ratelimit-input-tokens-limit": "500000",
+          "anthropic-ratelimit-input-tokens-remaining": "499000",
+          "anthropic-ratelimit-input-tokens-reset": "2026-09-16T06:05:02Z",
+          "anthropic-ratelimit-output-tokens-limit": "80000",
+          "anthropic-ratelimit-output-tokens-remaining": "80000",
+          "anthropic-ratelimit-output-tokens-reset": "2026-09-16T06:05:02Z",
+          "anthropic-ratelimit-requests-limit": "1000",
+          "anthropic-ratelimit-requests-remaining": "999",
+          "anthropic-ratelimit-requests-reset": "2026-09-16T06:05:01Z",
+          "anthropic-ratelimit-tokens-limit": "580000",
+          "anthropic-ratelimit-tokens-remaining": "579000",
+          "anthropic-ratelimit-tokens-reset": "2026-09-16T06:05:02Z",
+          "Server": "cloudflare",
+          "request-id": "req_011Cf6cartkbxFwuuHcV8iZy",
+          "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+          "anthropic-organization-id": "73a57cec-8684-4a17-8a8a-236663eb1dd3",
+          "anthropic-workspace-id": "wrkspc_01TZaSJ9Q4GT9s3KXaMsNH6P",
+          "traceresponse": "00-49fffb796995d0ed750b674d8ae16497-b19938bec1f13b51-01",
+          "vary": "Accept-Encoding",
+          "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+          "cf-cache-status": "DYNAMIC",
+          "X-Robots-Tag": "none",
+          "CF-RAY": "a3bdad5569821801-YUL"
+        },
+        "body": "{\"model\":\"claude-haiku-4-5-20251001\",\"id\":\"msg_011Cf6casRzioYwEuWKwzLK4\",\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The marker line contained in `spec/fixtures/tool_target.md` is: **PARSNIP-4417**\"}],\"container\":null,\"stop_reason\":\"end_turn\",\"stop_sequence\":null,\"stop_details\":null,\"usage\":{\"input_tokens\":1126,\"cache_creation_input_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation\":{\"ephemeral_5m_input_tokens\":0,\"ephemeral_1h_input_tokens\":0},\"output_tokens\":30,\"service_tier\":\"standard\",\"inference_geo\":\"not_available\"}}"
+      },
+      "recorded_at": "2026-09-16T06:05:02Z"
+    }
+  ]
+}

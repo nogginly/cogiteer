@@ -1,0 +1,31 @@
+{
+  "name": "flags_continue_setup",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "127",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Say hello in one short sentence.\"}]}]}",
+        "body_digest": "218812ea46c1ef036dd32ec9b3b5228a859a3547cc2a5bd2fdc94311e04134ae"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Fri, 18 Sep 2026 04:19:14 GMT",
+          "Content-Length": "615"
+        },
+        "body": "{\"id\":\"chatcmpl-565\",\"object\":\"chat.completion\",\"created\":1789705154,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Hello.\",\"reasoning\":\"*   Target: Say \\\"hello\\\".\\n    *   Constraint 1: One sentence.\\n    *   Constraint 2: Short.\\n\\n    *   \\\"Hello.\\\"\\n    *   \\\"Hi there!\\\"\\n    *   \\\"Greetings.\\\"\\n    *   \\\"Hey!\\\"\\n\\n    *   \\\"Hello.\\\" is the simplest and most direct.\\n\\n    *   \\\"Hello.\\\"\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":23,\"prompt_tokens_details\":{\"cached_tokens\":11},\"completion_tokens\":85,\"total_tokens\":108}}\n"
+      },
+      "recorded_at": "2026-09-18T04:19:14Z"
+    }
+  ]
+}

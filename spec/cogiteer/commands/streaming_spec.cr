@@ -60,6 +60,10 @@ private def with_sandbox(&) : Nil
         model: #{MODEL}
     defaults:
       streaming: true
+      # This file is about what a streamed turn prints and saves, not about
+      # tools. Left unset, the built-in ceiling would declare tools on every
+      # request here and change the body each transcript was recorded against.
+      max_tool_calls: 0
     YAML
 
   original_home = ENV["COGITEER_HOME"]?
