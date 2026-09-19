@@ -4,15 +4,33 @@ require "liaison"
 require "./file_tool"
 
 module Cogiteer::Tools
-  # What a tool does to the tree it is pointed at.
+  # What a tool does, and to what.
   #
-  # Declared rather than inferred, so `--readonly` can mean "nothing that
-  # declares a write" instead of "nothing on a list someone remembered to
-  # update". A list goes stale silently; a flag cannot.
+  # Declared rather than inferred, so a flag can mean "nothing that declares a
+  # write" instead of "nothing on a list someone remembered to update". A list
+  # goes stale silently; a flag cannot.
+  #
+  # Four members rather than two, because one enum was carrying two questions.
+  # `Write` and `Scratch` are both writing, and an operator cares about them
+  # differently: one changes work they own, the other fills a directory the
+  # tool created and they did not ask for. `Network` is orthogonal to both — a
+  # tool can leave the machine and touch no file at all.
+  #
+  # This says what a tool *touches*. Which of those an operator will allow is
+  # the flag's question, kept separate so this stays a table of facts and a
+  # spec can check it against the toolkit.
   @[Flags]
   enum Capability
+    # Reads the tree.
     Read
+    # Changes files the user owns. The one an operator is protecting.
     Write
+    # Writes only inside the scratch directory, which the tool created.
+    Scratch
+    # Leaves the machine. Says nothing about what happens at the far end: a
+    # `GET` may well change something there, which is why no flag here can
+    # promise more than "your files are as you left them".
+    Network
   end
 
   # A toolbox over one directory.
@@ -53,17 +71,33 @@ module Cogiteer::Tools
       "read_text_file"       => Capability::Read,
       "write_text_file"      => Capability::Read | Capability::Write,
       "text_replace"         => Capability::Read | Capability::Write,
+      "fetch_as_markdown"    => Capability::Network | Capability::Scratch,
     }
 
     def self.capabilities(name : String) : Capability
       CAPABILITIES[name]? || Capability::Write
     end
 
-    # `names` narrows what is offered; `nil` offers everything `FsUtils` has,
-    # so a tool the toolkit gains arrives without a change here. An empty list
-    # offers nothing, which is a thing an operator can mean.
+    # Tools the CLI will not offer unless asked for by name.
     #
-    # `readonly` then drops anything declaring a write, and takes precedence —
+    # `fetch_as_markdown` leaves the machine, and `FsUtils` opens it to every
+    # public host unless a host policy narrows it. This project has nowhere to
+    # set one yet and no flag to turn it off, so offering it by default would
+    # ship egress as a side effect of a `shards update`.
+    #
+    # Temporary, and replaced rather than extended: when `defaults.web` and
+    # its flag exist, the decision moves there and this list goes. Naming the
+    # tool in `tools:` still offers it, so nothing is unreachable in the
+    # meantime — it is off by default, not absent.
+    WITHHELD = ["fetch_as_markdown"]
+
+    # `names` narrows what is offered; `nil` offers everything `FsUtils` has
+    # except `WITHHELD`, so a tool the toolkit gains arrives without a change
+    # here. An empty list offers nothing, which is a thing an operator can
+    # mean, and a name in `WITHHELD` is offered when asked for explicitly.
+    #
+    # `readonly` then drops anything declaring `Capability::Write`, and takes
+    # precedence —
     # it exists to make a configured set safe for one run without editing the
     # configuration.
     #
@@ -97,6 +131,8 @@ module Cogiteer::Tools
           raise UnknownTool.new("no tool named #{name.inspect} — available: #{offered.join(", ")}")
         end
         definitions = definitions.select { |definition| names.includes?(definition.name) }
+      else
+        definitions = definitions.reject { |definition| WITHHELD.includes?(definition.name) }
       end
 
       if readonly

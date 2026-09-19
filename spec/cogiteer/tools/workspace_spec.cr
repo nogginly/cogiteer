@@ -16,10 +16,24 @@ private def in_sandbox(& : String ->)
 end
 
 describe Cogiteer::Tools::Workspace do
-  it "offers everything the toolkit has when nothing narrows it" do
+  it "offers everything the toolkit has, less what is withheld, when nothing narrows it" do
     in_sandbox do |root|
       offered = Cogiteer::Tools::Workspace.toolbox(root).functions.map(&.name)
-      offered.sort.should eq FsUtils::Tools.new(root).definitions.map(&.name).sort
+      available = FsUtils::Tools.new(root).definitions.map(&.name)
+      expected = available - Cogiteer::Tools::Workspace::WITHHELD
+
+      offered.sort.should eq expected.sort
+      Cogiteer::Tools::Workspace::WITHHELD.each { |name| offered.should_not contain name }
+    end
+  end
+
+  # Withheld is off by default, not absent: an operator who names it gets it.
+  # Without this the list would be indistinguishable from dropping the tool.
+  it "offers a withheld tool when it is named" do
+    in_sandbox do |root|
+      name = Cogiteer::Tools::Workspace::WITHHELD.first
+      offered = Cogiteer::Tools::Workspace.toolbox(root, names: [name]).functions.map(&.name)
+      offered.should eq [name]
     end
   end
 
@@ -71,6 +85,27 @@ describe Cogiteer::Tools::Workspace do
         offered.should_not contain "write_text_file"
         offered.should_not contain "text_replace"
       end
+    end
+
+    # What it protects is the user's files, so a tool that writes only to the
+    # scratch directory survives. Asserted on the classification rather than
+    # through `toolbox`, because `fetch_as_markdown` is withheld from the
+    # default offer and this is a statement about the table, not the offer.
+    it "keeps a tool that writes only to scratch" do
+      capabilities = Cogiteer::Tools::Workspace.capabilities("fetch_as_markdown")
+
+      capabilities.includes?(Cogiteer::Tools::Capability::Write).should be_false
+      capabilities.includes?(Cogiteer::Tools::Capability::Scratch).should be_true
+      capabilities.includes?(Cogiteer::Tools::Capability::Network).should be_true
+    end
+
+    # An unclassified name still fails closed, which is what allows a toolkit
+    # update to add a tool without stopping the CLI starting.
+    it "treats an unclassified tool as writing" do
+      Cogiteer::Tools::Workspace
+        .capabilities("some_tool_nobody_classified")
+        .includes?(Cogiteer::Tools::Capability::Write)
+        .should be_true
     end
 
     it "overrides a named set that asked for a writing tool" do
