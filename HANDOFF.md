@@ -92,11 +92,11 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**The five filesystem tools have recorded end-to-end specs**, one per tool,
-plus `write_text_file`'s two calling patterns as separate examples.
-`fetch_as_markdown` does not, and that is the one open piece of tool work —
-`SCOPE.md` carries what has to be settled first. What follows is for whoever
-records it, adds a seventh tool, or changes one of these.
+**All six `fsutils` tools now have recorded end-to-end specs**, one per tool,
+plus `write_text_file`'s two calling patterns and `--no-web`'s refusal as
+separate examples. Nothing in the tool work is outstanding; what remains in
+`SCOPE.md` is configuration surface, not coverage. What follows is for whoever
+adds a seventh tool, or changes one of these.
 
 **A tool is not integrated when it runs; it is integrated when someone has
 decided what it may do.** `fetch_as_markdown` took four questions that a
@@ -116,6 +116,22 @@ Walks a folder       |`search_spec.cr`, `find_spec.cr`|Array arguments, sorted r
 Edits a file         |`replace_spec.cr`               |Scratch copies                               
 Creates or overwrites|`write_spec.cr`                 |Missing parents, and a boolean argument      
 A CLI flag           |`commands/tool_flags_spec.cr`   |A flag overriding a config that disagrees    
+Reaches the network  |`fetch_spec.cr`                 |A fixture server, and a gate that denies it  
+
+**A tool that leaves the machine needs the suite to supply the machine.**
+`spec/support/web_fixture.cr` serves one page from `127.0.0.1`, and two things
+about it are load-bearing rather than tidy. The port is a **constant**, because
+Wiretap matches interactions on the exact URL and the prompt naming the page
+puts that same URL inside the deployment's request body — a found port would
+replay neither. And the server runs **only while recording**: on replay the
+fetch comes from the transcript, so a machine already using the port is not a
+failing suite. Change the page and the transcript, not the server, is what a
+replay still believes.
+
+`Workspace` carries a protected `allow_private_hosts` seam so that fetch can
+reach loopback at all, reopened by the fixture. It is temporary and
+`SCOPE.md` says when it goes — if you are reading this after `toolkit:` landed
+and the seam is still here, that is the bug.
 
 **Every verb parses its own flags, so every verb is covered separately.**
 `start` and `continue` keep independent `OptionParser` blocks with overlapping
