@@ -23,14 +23,15 @@ module Cogiteer::Commands
         --show-reasoning, --hide-reasoning
                                        put the model's thinking on stderr
         --tools a,b                    offer only these tools; empty offers none
-        --readonly                     drop every tool that writes
+        --no-edit                      drop every tool that changes your files
+        --web, --no-web                allow, or refuse, tools that reach the web
         --max-tool-calls N             ceiling for this turn; 0 offers no tools
         --reproducible-tools, --no-reproducible-tools
                                        omit when and where a tool call ran
         -h, --help                     show this message
 
       Example:
-        cogiteer start ollama "Summarise README.md" --readonly
+        cogiteer start ollama "Summarise README.md" --no-edit
       USAGE
 
     def run(args : Array(String)) : Nil
@@ -40,7 +41,8 @@ module Cogiteer::Commands
       max_tool_calls = nil.as(Int32?)
       reproducible_tools = nil.as(Bool?)
       tool_names = nil.as(Array(String)?)
-      readonly_tools = false
+      no_edit_tools = false
+      web_tools = nil.as(Bool?)
       OptionParser.parse(args) do |parser|
         parser.on("-h", "--help", "show this message") do
           puts USAGE
@@ -57,7 +59,11 @@ module Cogiteer::Commands
         parser.on("--tools NAMES", "offer only these tools, comma-separated; empty offers none") do |value|
           tool_names = value.split(',').map(&.strip).reject(&.empty?)
         end
-        parser.on("--readonly", "drop any tool that writes, whatever else was asked for") { readonly_tools = true }
+        parser.on("--no-edit", "drop any tool that changes your files, whatever else was asked for") do
+          no_edit_tools = true
+        end
+        parser.on("--web", "allow tools that reach the web, whatever the config says") { web_tools = true }
+        parser.on("--no-web", "refuse tools that reach the web") { web_tools = false }
         parser.on("--reproducible-tools", "omit when and where a tool call ran") { reproducible_tools = true }
         parser.on("--no-reproducible-tools", "report when and where a tool call ran") { reproducible_tools = false }
         parser.on("--max-tool-calls N", "ceiling on tool calls for this turn; 0 offers no tools") do |value|
@@ -93,6 +99,8 @@ module Cogiteer::Commands
       reproducible = requested_reproducible.nil? ? config.defaults.reproducible_tools? : requested_reproducible
       requested_tools = tool_names
       tools = requested_tools || config.defaults.tools
+      requested_web = web_tools
+      web = requested_web.nil? ? config.defaults.web? : requested_web
 
       session = Liaison::MPSH::Session.new
       reply, report = Progress.while_waiting("waiting on #{deployment_name}", Output.error_stream) do |ticker|
@@ -100,7 +108,7 @@ module Cogiteer::Commands
           reasoning: d.reasoning, retention: d.reasoning_retention,
           display: display, indicator: ticker,
           max_tool_calls: tool_calls, reproducible_tools: reproducible,
-          tool_names: tools, readonly_tools: readonly_tools)
+          tool_names: tools, no_edit_tools: no_edit_tools, web_tools: web)
       end
 
       Sessions.snapshot(id, session, deployment_name)

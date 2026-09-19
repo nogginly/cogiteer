@@ -5,11 +5,13 @@ require "../../support/tool_harness"
 # config. Each verb parses its own copy, so each is covered separately, as
 # `streaming_spec.cr` does for `--stream`.
 #
-# `--readonly` first, because it is the flag whose whole purpose is to deny
+# `--no-edit` first, because it is the flag whose whole purpose is to deny
 # something the config allows: the config here offers a writer, the flag drops
 # it, and the turn must be unable to write. The reader stays offered and is
 # still called, so a failure here is the flag misfiring rather than tools
 # being off altogether.
+# The transcript names still say `readonly`: the flag was renamed, the
+# recording was not. Renaming an id re-records it for nothing.
 private ID        = "flags_readonly_start"
 private TOOLS_ID  = "flags_tools_start"
 private NONE_ID   = "flags_no_tools_start"
@@ -21,7 +23,7 @@ private OFFERED = ["read_text_file", "write_text_file"]
 # Every flag here is tested against a config that says something *different*,
 # so a pass cannot come from the config already agreeing with the flag.
 
-describe "cogiteer start --readonly" do
+describe "cogiteer start --no-edit" do
   it "drops the writer the config offered, leaving the reader" do
     ToolHarness.with_config(ToolHarness.ollama(50, OFFERED)) do
       ToolHarness.with_scratch(ID, [FIXTURE]) do |dir|
@@ -32,7 +34,7 @@ describe "cogiteer start --readonly" do
           Cogiteer::Commands::Start.run(["ollama",
                                          "Write the first line of #{source} into #{target}.",
                                          "If you cannot write, read #{source} and tell me its first line instead.",
-                                         "--readonly"])
+                                         "--no-edit"])
         end
 
         session = ToolHarness.only_session
@@ -41,7 +43,7 @@ describe "cogiteer start --readonly" do
         # What the model *attempted* is not the subject. A model that emits
         # calls as text can name a tool it was never offered, and this one
         # does: it reads, tries to write, is refused, and answers in prose.
-        # What `--readonly` promises is that such a call cannot succeed.
+        # What `--no-edit` promises is that such a call cannot succeed.
         pairs.map { |call, _| call.name }.should contain("read_text_file")
         pairs.each { |call, result| result.is_error?.should be_true if call.name == "write_text_file" }
         File.exists?(target).should be_false
@@ -51,7 +53,7 @@ describe "cogiteer start --readonly" do
     end
   end
 
-  # The flag narrows a config that offers more, the mirror of `--readonly`
+  # The flag narrows a config that offers more, the mirror of `--no-edit`
   # arriving at the same place by a different route.
   it "offers only the named tool when --tools narrows the config" do
     ToolHarness.with_config(ToolHarness.ollama(50, OFFERED)) do

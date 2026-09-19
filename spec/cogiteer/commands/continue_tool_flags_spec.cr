@@ -16,6 +16,7 @@ private FIXTURE = "spec/fixtures/editable/draft.md"
 
 private OFFERED = ["read_text_file", "write_text_file"]
 
+# Named for the flag as it was when this was recorded; see tool_flags_spec.cr.
 private READONLY_ID = "flags_readonly_continue"
 private TOOLS_ID    = "flags_tools_continue"
 private CAPPED_ID   = "flags_capped_continue"
@@ -28,7 +29,7 @@ private def started : String
 end
 
 describe "cogiteer continue, with tool flags" do
-  it "drops the writer the config offered when --readonly is given" do
+  it "drops the writer the config offered when --no-edit is given" do
     ToolHarness.with_config(ToolHarness.ollama(50, OFFERED)) do
       ToolHarness.with_scratch(READONLY_ID, [FIXTURE]) do |dir|
         id = started
@@ -39,7 +40,7 @@ describe "cogiteer continue, with tool flags" do
           Cogiteer::Commands::Continue.run([id,
                                             "Write the first line of #{source} into #{target}. " \
                                             "If you cannot write, read #{source} and tell me its first line instead.",
-                                            "--readonly"])
+                                            "--no-edit"])
         end
 
         pairs = ToolHarness.exchanges(ToolHarness.latest(id))

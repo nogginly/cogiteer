@@ -24,7 +24,8 @@ USAGE = <<-USAGE
     --show-reasoning, --hide-reasoning
                                      put the model's thinking on stderr
     --tools a,b                      offer only these tools; empty offers none
-    --readonly                       drop every tool that writes
+    --no-edit                        drop every tool that changes your files
+    --web, --no-web                  allow, or refuse, tools that reach the web
     --max-tool-calls N               ceiling for this turn; 0 offers no tools
 
   A turn can read and edit files under the directory you run it from. 'cogiteer

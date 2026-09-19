@@ -174,16 +174,27 @@ Key                 |Default|Flag                                             |M
 `max_tool_calls`    |`50`   |`--max-tool-calls`                               |Ceiling on tool calls in one turn; `0` offers no tools
 `tools`             |absent |`--tools`                                        |Which tools to offer; absent is all, `[]` is none     
 `reproducible_tools`|`false`|`--reproducible-tools`, `--no-reproducible-tools`|Omit when and where a tool call ran                   
+`web`               |`none` |`--web`, `--no-web`                              |Whether a turn may reach the network                  
 
 **Every key here pairs with a flag of the same name**, and that is the rule the
 block is held to rather than a coincidence. A key with no flag behind it is how
 a section like this turns into a junk drawer, and a key spelled differently
 from its flag is a translation table someone has to keep in step with `--help`.
 
-The rule runs one way. A flag needs no key, and `--readonly` has none: it
+The rule runs one way. A flag needs no key, and `--no-edit` has none: it
 exists to make a configured tool set safe for one run without editing the
 configuration, and a key would be that edit. `--id` and `--on` are the same
 shape — facts about one invocation, not about how the CLI behaves.
+
+`web` is the counter-case, and worth saying why it earns a key where
+`--no-edit` does not. `--no-edit` subtracts for one run from a set the
+operator already chose; `web` decides whether a capability is available at
+all, which is a standing decision about a machine rather than a fact about one
+invocation. It is two words rather than a boolean — `none` and `any` — because
+the state an operator will want next is a list of permitted hosts, and a
+`Bool` has nowhere to put one. **`off` is not a spelling**, for the reason
+`reasoning` gives below: YAML 1.1 reads a bare `off` as boolean false, so it
+would arrive as the wrong type and fail confusingly.
 
 The two flags default to false, which is what the CLI did before the block
 existed. `max_tool_calls` is the one key whose default is not the old
@@ -722,22 +733,26 @@ flowchart TB
 
 ### Choosing what is offered
 
-`tools` narrows the set, `--readonly` then drops anything that writes, and
-`--readonly` wins. An absent `tools` offers everything `fsutils` has, so a tool
-the toolkit gains arrives without a change here; `[]` offers nothing, which an
-operator can mean. A name the toolkit does not offer raises: a typo that
-silently dropped a tool would leave a model unable to do something, with
-nothing to read explaining why.
+`tools` narrows the set; two gates then subtract from whatever it left, and
+both win over it. An absent `tools` offers everything `fsutils` has except the
+network tools, so a tool the toolkit gains arrives without a change here; `[]`
+offers nothing, which an operator can mean. A name the toolkit does not offer
+raises: a typo that silently dropped a tool would leave a model unable to do
+something, with nothing to read explaining why.
+
+Naming a tool a gate then drops offers nothing rather than raising. It is the
+same decision as `--no-edit` beating `tools`, read one step further: a gate
+that a config could argue with is not a gate.
 
 Whether a tool writes is declared in `Workspace::CAPABILITIES`, because
 `FsUtils::Definition` says nothing about it. **A name missing from that table
 counts as writing.** This looks like an oversight and is not.
 
-Option                  |After `shards update` adds a tool                            
-------------------------|-------------------------------------------------------------
-Raise on an unknown name|The CLI will not start, for every command                    
-Count it as reading     |`--readonly` offers a tool that might write                  
-**Count it as writing** |Kept out of `--readonly`; offered to a run that asked for all
+Option                  |After `shards update` adds a tool                           
+------------------------|------------------------------------------------------------
+Raise on an unknown name|The CLI will not start, for every command                   
+Count it as reading     |`--no-edit` offers a tool that might write                  
+**Count it as writing** |Kept out of `--no-edit`; offered to a run that asked for all
 
 Raising punishes the user for a decision the maintainer has not made yet.
 Counting it as reading fails open on the one flag whose whole promise is not
@@ -747,6 +762,59 @@ The decision still gets made, and the suite forces it: `workspace_spec.cr`
 asserts every definition is classified, so the update that introduces a tool
 fails this project's tests — which is when someone should decide what it is,
 rather than when a user meets it.
+
+### Four capabilities, because one enum was carrying two questions
+
+`Capability` began as `Read` and `Write` over one tree, which held for exactly
+as long as every tool was a filesystem tool. `fetch_as_markdown` broke it in
+two directions at once: it leaves the machine, and when a page is too large to
+return inline it writes the content to a scratch directory. Classified with
+what existed, it was either a read — and `--readonly` would have handed a model
+egress and a file it could create — or a write, and the most useful thing a
+no-edit run could do would have been unavailable.
+
+Member   |Means                                                               
+---------|--------------------------------------------------------------------
+`Read`   |Reads the tree                                                      
+`Write`  |Changes files the user owns — the thing an operator is protecting   
+`Scratch`|Writes only inside a directory the tool created and nobody asked for
+`Network`|Leaves the machine                                                  
+
+The table says what a tool *touches*; which of those an operator allows is the
+flags' question. Keeping them apart is what lets `workspace_spec.cr` check the
+table against the toolkit, and what made `--no-edit` need no change when
+`Network` arrived: it already tested the member it meant.
+
+### `--readonly` became `--no-edit`, because the old word claimed too much
+
+The flag never meant "reads only" and now visibly does not: it permits a tool
+that reaches the internet. Nor can it promise nothing changed — a `GET` may
+well be a mutation at the far end, and nothing here can know. What it can
+promise, and all it can promise, is **your files are as you left them**, which
+is what the new name says. `--safe` was considered and rejected for implying
+security guarantees this makes none of.
+
+The old spelling was dropped rather than aliased. The project carries a
+work-in-progress warning, and two names for one flag is the kind of kindness
+that outlives its reason.
+
+### Web access is asked for, never inherited
+
+Every other gate subtracts from what was asked for. `web` is the one that must
+be asked for, and the asymmetry is deliberate: `fsutils` opens `fetch` to every
+public host unless a policy narrows it, so a default of `any` would mean a
+`shards update` could turn on egress for every existing `cogiteer.yaml`.
+
+`none` does not offer the tool, rather than offering it and refusing every URL.
+A refusal costs a call out of the budget and teaches a model something it
+cannot act on — `fsutils` gives the empty-allowlist refusal its own "stop, do
+not retry" suggestion precisely because it is unfixable from the model's side.
+
+The scratch directory is the part a user meets without asking for it: a long
+page lands in `.agent-scratch/` under the working directory, and nothing prunes
+it. `fsutils` keeps it out of `find_files` and `search_file_contents`, so it
+does not pollute a search, but it is the user's to clean up and `README.md`
+says so where someone will read it before turning the tool on.
 
 `reproducible_tools` drops a walk's `elapsed_ms` and a find result's `modified`.
 Off by default, because an mtime is how a model notices a file changed under

@@ -1,0 +1,78 @@
+{
+  "name": "tools_fetch_markdown",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "1132",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Fetch http://127.0.0.1:47231/small and tell me what temperature it names. Use the tool; do not guess.\"}]}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"fetch_as_markdown\",\"description\":\"Fetch a URL and return it as Markdown. An HTML page is converted to Markdown; a site that serves Markdown is used as it is; any other text -- CSV, JSON, XML, CSS, SVG, plain text -- is returned inside a fenced code block tagged with its type. Short results are returned in `content`. A longer one is written to a file in the workspace and its location and content are described instead, including an excerpt and a `toc` whose line numbers go to read_text_file as `offset` and `limit`. A stored file opens with a front matter block naming the page it came from. Check `truncated` and `notice`: content over 4194304 bytes is cut short. Only text is read.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"url\": {\n      \"type\": \"string\",\n      \"description\": \"Absolute http or https URL of the page to fetch.\"\n    }\n  },\n  \"required\": [\"url\"]\n}}}]}",
+        "body_digest": "474f0a888df5fd6e0bd05ad63df0f8ed5d5d9c7e0523fb0cf309ad42756da40f"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Sat, 19 Sep 2026 16:08:52 GMT",
+          "Content-Length": "993"
+        },
+        "body": "{\"id\":\"chatcmpl-506\",\"object\":\"chat.completion\",\"created\":1789834132,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"The user wants me to fetch a specific URL (`http://127.0.0.1:47231/small`) and identify a temperature mentioned in the content.\\n\\nI should use the `fetch_as_markdown` tool to retrieve the content of the URL.\\nAfter fetching the content, I will read the text and look for a temperature reading.\\n\\n1. **Tool Call**: `fetch_as_markdown(url=\\\"http://127.0.0.1:47231/small\\\")`\\n2. **Analysis**: Read the returned markdown/text.\\n3. **Response**: State the temperature found.\",\"tool_calls\":[{\"id\":\"call_uw2wdre2\",\"index\":0,\"type\":\"function\",\"function\":{\"name\":\"fetch_as_markdown\",\"arguments\":\"{\\\"url\\\":\\\"http://127.0.0.1:47231/small\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":262,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens\":177,\"total_tokens\":439}}\n"
+      },
+      "recorded_at": "2026-09-19T16:08:52Z"
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "http://127.0.0.1:47231/small",
+        "headers": {
+          "User-Agent": "fsutils",
+          "Accept": "text/markdown, text/html;q=0.9, application/xhtml+xml;q=0.8",
+          "Host": "127.0.0.1:47231",
+          "Accept-Encoding": "gzip, deflate"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Connection": "keep-alive",
+          "Content-Type": "text/html",
+          "Content-Length": "135"
+        },
+        "body": "<html><head><title>Kettle</title></head><body><main><h1>Kettle</h1><p>The kettle boils at one hundred degrees.</p></main></body></html>"
+      },
+      "recorded_at": "2026-09-19T16:08:52Z"
+    },
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "2090",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Fetch http://127.0.0.1:47231/small and tell me what temperature it names. Use the tool; do not guess.\"}]},{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"mc_1789834132496_0\",\"type\":\"function\",\"function\":{\"name\":\"fetch_as_markdown\",\"arguments\":\"{\\\"url\\\":\\\"http://127.0.0.1:47231/small\\\"}\"}}],\"reasoning_content\":\"The user wants me to fetch a specific URL (`http://127.0.0.1:47231/small`) and identify a temperature mentioned in the content.\\n\\nI should use the `fetch_as_markdown` tool to retrieve the content of the URL.\\nAfter fetching the content, I will read the text and look for a temperature reading.\\n\\n1. **Tool Call**: `fetch_as_markdown(url=\\\"http://127.0.0.1:47231/small\\\")`\\n2. **Analysis**: Read the returned markdown/text.\\n3. **Response**: State the temperature found.\"},{\"role\":\"tool\",\"content\":\"{\\\"ok\\\":true,\\\"url\\\":\\\"http://127.0.0.1:47231/small\\\",\\\"status\\\":200,\\\"title\\\":\\\"Kettle\\\",\\\"content_type\\\":\\\"text/html\\\",\\\"bytes\\\":50,\\\"content\\\":\\\"# Kettle\\\\n\\\\nThe kettle boils at one hundred degrees.\\\"}\",\"tool_call_id\":\"mc_1789834132496_0\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"fetch_as_markdown\",\"description\":\"Fetch a URL and return it as Markdown. An HTML page is converted to Markdown; a site that serves Markdown is used as it is; any other text -- CSV, JSON, XML, CSS, SVG, plain text -- is returned inside a fenced code block tagged with its type. Short results are returned in `content`. A longer one is written to a file in the workspace and its location and content are described instead, including an excerpt and a `toc` whose line numbers go to read_text_file as `offset` and `limit`. A stored file opens with a front matter block naming the page it came from. Check `truncated` and `notice`: content over 4194304 bytes is cut short. Only text is read.\",\"parameters\":{\n  \"type\": \"object\",\n  \"properties\": {\n    \"url\": {\n      \"type\": \"string\",\n      \"description\": \"Absolute http or https URL of the page to fetch.\"\n    }\n  },\n  \"required\": [\"url\"]\n}}}]}",
+        "body_digest": "f8ddea7a2bbb237f6fa6d1c6ba6990cff7e4d901477260c8954da18872aa2538"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Sat, 19 Sep 2026 16:08:55 GMT",
+          "Content-Length": "698"
+        },
+        "body": "{\"id\":\"chatcmpl-494\",\"object\":\"chat.completion\",\"created\":1789834135,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The temperature mentioned is one hundred degrees.\",\"reasoning\":\"The user wants to know the temperature mentioned in the content of the URL `http://127.0.0.1:47231/small`.\\nI have fetched the URL using `fetch_as_markdown`.\\nThe content returned is: `# Kettle\\\\n\\\\nThe kettle boils at one hundred degrees.`\\nThe temperature mentioned is \\\"one hundred degrees\\\".\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":381,\"prompt_tokens_details\":{\"cached_tokens\":262},\"completion_tokens\":87,\"total_tokens\":468}}\n"
+      },
+      "recorded_at": "2026-09-19T16:08:55Z"
+    }
+  ]
+}

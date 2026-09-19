@@ -1,0 +1,31 @@
+{
+  "name": "tools_fetch_refused",
+  "recorded_with": "wiretap/0.4.2",
+  "interactions": [
+    {
+      "request": {
+        "method": "POST",
+        "url": "http://127.0.0.1:11434/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json",
+          "Content-Length": "205",
+          "Host": "127.0.0.1:11434",
+          "User-Agent": "Crystal",
+          "Accept-Encoding": "gzip, deflate"
+        },
+        "body": "{\"model\":\"gemma4:26b-mxfp8\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Fetch http://127.0.0.1:47231/small and tell me what temperature it names. If you cannot fetch, say so plainly.\"}]}]}",
+        "body_digest": "c856eeacd08329010d9486d74765870d03038795ee1701f980bbf958e4338309"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json",
+          "Date": "Sat, 19 Sep 2026 16:09:03 GMT",
+          "Content-Length": "1249"
+        },
+        "body": "{\"id\":\"chatcmpl-977\",\"object\":\"chat.completion\",\"created\":1789834143,\"model\":\"gemma4:26b-mxfp8\",\"system_fingerprint\":\"fp_ollama\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I cannot fetch it.\",\"reasoning\":\"*   Action: Fetch URL `http://127.0.0.1:47231/small`.\\n    *   Goal: Tell the user what temperature is named at that endpoint.\\n    *   Constraint: If I cannot fetch, say so plainly.\\n\\n    *   I am an AI model. I do not have direct access to the user's local network/localhost (`127.0.0.1`).\\n    *   `127.0.0.1` (localhost) refers to the machine the requester is currently on. Since I am running on remote servers, I cannot reach the user's local machine's ports.\\n\\n    *   Confirm that I cannot fetch the URL.\\n    *   Use the specific instruction: \\\"If you cannot fetch, say so plainly.\\\"\\n\\n    *   Draft 1: I cannot fetch that URL.\\n    *   Draft 2: I cannot fetch the URL because it is a local address.\\n    *   Refined (following \\\"say so plainly\\\"): I cannot fetch the URL.\\n\\n    *   User: \\\"If you cannot fetch, say so plainly.\\\"\\n    *   Response: I cannot fetch it.\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":53,\"prompt_tokens_details\":{\"cached_tokens\":6},\"completion_tokens\":264,\"total_tokens\":317}}\n"
+      },
+      "recorded_at": "2026-09-19T16:09:03Z"
+    }
+  ]
+}

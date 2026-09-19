@@ -6,7 +6,11 @@ shards:
 
   fsutils:
     git: https://github.com/nogginly/fsutils.cr.git
-    version: 0.2.2+git.commit.f31573eb61a9c54fb8e723c322ff041f477a50cd
+    version: 0.3.2+git.commit.945a57aaf13186af27b1d8136fe7985ac1bc2663
+
+  html5:
+    git: https://github.com/naqvis/crystal-html5.git
+    version: 0.7.0
 
   liaison:
     git: https://github.com/modelarmy/liaison.cr.git
@@ -19,4 +23,8 @@ shards:
   wiretap:
     git: https://github.com/nogginly/wiretap.cr.git
     version: 0.4.2
+
+  xpath2:
+    git: https://github.com/naqvis/crystal-xpath2.git
+    version: 0.2.0
 
