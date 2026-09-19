@@ -70,7 +70,8 @@ Flag                                  |Does
 `--stream`, `--no-stream`             |Show the reply as it arrives, or wait for it
 `--show-reasoning`, `--hide-reasoning`|Put the model's thinking on stderr          
 `--tools <a,b>`                       |Offer only these tools; empty offers none   
-`--readonly`                          |Drop every tool that writes                 
+`--no-edit`                           |Drop every tool that changes your files     
+`--web`, `--no-web`                   |Allow, or refuse, tools that reach the web  
 `--max-tool-calls <n>`                |Ceiling for this turn; `0` offers no tools  
 `--reproducible-tools`, `--no-…`      |Omit when and where a tool call ran         
 
@@ -79,13 +80,15 @@ generated one; `continue` takes `--on <deployment>` to switch deployment.
 
 ## Tools
 
-A turn can read and edit files. The CLI offers the [`fsutils`][fsutils]
-filesystem toolkit — `read_text_file`, `find_files`, `search_file_contents`,
-`write_text_file` and `text_replace` — rooted at the directory you ran it from,
-runs whatever the model calls, and feeds the results back until it answers.
+A turn can read and edit files, and fetch a web page. The CLI offers the
+[`fsutils`][fsutils] toolkit — `read_text_file`, `find_files`,
+`search_file_contents`, `write_text_file` and `text_replace`, rooted at the
+directory you ran it from, plus `fetch_as_markdown`, which is off unless you
+ask for it — runs whatever the model calls, and feeds the results back until it
+answers.
 
 ```console
-$ cogiteer start ollama "Which spec covers the tool budget? Read before you answer." --readonly
+$ cogiteer start ollama "Which spec covers the tool budget? Read before you answer." --no-edit
 Session: candid-otter
 spec/cogiteer/tools/tools_spec.cr — its second example caps the run at one call.
 ```
@@ -111,9 +114,48 @@ flowchart TD
 - **The budget counts calls, not rounds.** Once `max_tool_calls` is spent the
   remaining calls come back refused, with an instruction to summarise and stop,
   and the turn ends in prose rather than mid-task. `0` offers no tools at all.
-- **`tools` decides what is on the table, `--readonly` takes the writers off
-  it.** `--readonly` wins over anything `tools` asked for, which is the point:
-  it makes a configured set safe for one run without editing the file.
+- **`tools` decides what is on the table; the two gates take things off it.**
+  Both win over anything `tools` asked for, which is the point: they make a
+  configured set safe for one run without editing the file. Name a tool a gate
+  then drops and you get nothing, which is the gate doing its job.
+
+```mermaid
+---
+config:
+  layout: elk
+---
+flowchart TD
+    T[Every tool fsutils offers] --> N{{tools names a subset?}}
+    N -- yes --> S[Keep those]
+    N -- no --> S2[Keep all]
+    S --> W
+    S2 --> W
+    W{{web allowed?}} -- no --> D1[Drop anything that leaves the machine]
+    W -- yes --> E
+    D1 --> E
+    E{{no-edit given?}} -- yes --> D2[Drop anything that changes your files]
+    E -- no --> O[Offered]
+    D2 --> O
+```
+
+### Reaching the web
+
+`fetch_as_markdown` fetches a page and converts it to Markdown. It is **off by
+default** and needs `web: any` under `defaults`, or `--web` for one run; today
+that means any public host, so turning it on is a decision rather than a
+detail. `--no-web` refuses it whatever the config says.
+
+Two things worth knowing before you turn it on:
+
+- **A long page does not come back inline.** Past a size limit the content is
+  written to a scratch directory — `.agent-scratch/` inside the directory you
+  ran from — and the model gets a path, an excerpt and a table of contents to
+  read from. **The directory is yours to clean up**; nothing prunes it, and
+  your `.gitignore` probably does not mention it. It is skipped by
+  `find_files` and `search_file_contents`.
+- **`--no-edit` does not cover it.** What that flag protects is your files, and
+  fetching changes none of them. It cannot promise anything about the far end:
+  a `GET` may well change something on a server, and no flag here can know.
 
 ## Configuration
 
@@ -145,7 +187,8 @@ defaults:
   show_reasoning: false
   max_tool_calls: 50
   reproducible_tools: false
-  # tools: [read_text_file, find_files]   # absent offers every tool
+  web: none                               # or 'any' to allow web fetches
+  # tools: [read_text_file, find_files]   # absent offers every local tool
 ```
 
 Every key under `defaults` has a flag of the same name, so anything set here can

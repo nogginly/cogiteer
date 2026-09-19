@@ -49,10 +49,38 @@ Nothing currently.
 
 - **`Workspace::CAPABILITIES` classifies tools that `fsutils` could classify
   itself.** `Definition` carries a name, a description and a schema, and says
-  nothing about whether a tool writes — so every host offering a read-only mode
+  nothing about what a tool touches — so every host offering a restricted mode
   hardcodes the same table. That passes the test for belonging in the shard.
-  Not raised yet, deliberately: worth knowing what shape this project actually
-  needed before asking for it.
+  Now stronger than when it was written: the table has four members rather than
+  two, and `fetch_as_markdown` proved a host cannot infer them from a name. We
+  know what shape this project needed, so the reason for not raising it has
+  expired.
+
+- **`defaults.web` has two states where the useful third is a host allowlist.**
+  `any` means any public host, which is a blunt thing to hand a model.
+  `FsUtils::Tools::Config::Fetch` already carries allow and deny lists, a
+  private-host switch, and size and time bounds — none of which this project
+  can set. `WebAccess` is an enum rather than a `Bool` so a third state has
+  somewhere to go, but nothing consumes one yet. Becomes real the first time
+  someone wants a run that may read one vendor's docs and nothing else.
+
+- **Nothing prunes the scratch directory.** A long fetch writes into
+  `.agent-scratch/` under the working directory and leaves it there, across
+  runs and sessions. Documented in `README.md` as the user's to clean up, which
+  is honest rather than good. A `--clean` verb, an age limit, or per-session
+  subdirectories would each work; none is obviously right, and inventing a
+  retention policy before anyone has complained is how a CLI grows a cache
+  nobody asked for.
+
+- **`fetch_as_markdown` has no recorded end-to-end spec.** The other tools each
+  have one; this one is covered at the `Workspace` level only. Wiretap does
+  intercept the fetch — it monkeypatches `HTTP::Client#exec`, which is what
+  `fsutils` now calls — so a recording is possible. Two things to settle first:
+  `HostPolicy` resolves the hostname before the request and Wiretap does not
+  intercept DNS, so replay still needs a resolver; and a public URL means
+  committing a copy of someone's page. A local fixture server answers both, the
+  way `fsutils`' own suite does, at the cost of `allow_private_hosts` in the
+  spec config.
 
 - **The `AGAIN` branch of the tool loop is exercised by one transcript and one
   provider.** A model that ignores `tool_choice: None` is answered with

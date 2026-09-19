@@ -25,7 +25,9 @@ specification wins — this project consumes that format and does not define it.
 session on disk. `docs/DESIGN.md` carries the argument for each.
 
 **Tool execution is built.** A turn offers the [`fsutils`][fsutils] filesystem
-tools, rooted at the working directory, and runs them in a bounded loop.
+tools, rooted at the working directory, and runs them in a bounded loop. A
+sixth tool, `fetch_as_markdown`, reaches the web and is off unless `web: any`
+or `--web` asks for it.
 `docs/DESIGN.md`'s *Tools* section is the argument; the summary is that the
 ceiling counts calls rather than rounds, a round too large is split rather than
 refused, and a spent budget ends the turn with `tool_choice: None`.
@@ -90,10 +92,20 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**All five `fsutils` tools now have recorded end-to-end specs**, one per tool,
-plus `write_text_file`'s two calling patterns as separate examples. Nothing in
-the tool work is outstanding. What follows is for whoever adds the sixth tool,
-or changes one of these.
+**The five filesystem tools have recorded end-to-end specs**, one per tool,
+plus `write_text_file`'s two calling patterns as separate examples.
+`fetch_as_markdown` does not, and that is the one open piece of tool work —
+`SCOPE.md` carries what has to be settled first. What follows is for whoever
+records it, adds a seventh tool, or changes one of these.
+
+**A tool is not integrated when it runs; it is integrated when someone has
+decided what it may do.** `fetch_as_markdown` took four questions that a
+filesystem tool never raised: what it touches (`Capability` went from two
+members to four), whether a flag named `--readonly` could honestly cover it (it
+could not, and is now `--no-edit`), whether a dependency update may turn on
+egress (no — `defaults.web` is `none`), and who cleans up the scratch directory
+it leaves in the user's project (the user, said plainly in `README.md`). Expect
+the next non-filesystem tool to raise its own.
 
 **Where a new spec starts.** Copy the nearest of:
 
@@ -149,7 +161,7 @@ from the model's arguments to the disk and back:
    argument survived the conversion in `arguments.cr`.
 3. **Never the model's prose, nor what it attempted.** Both are the model's
    business, and a model that emits calls as text can name a tool it was never
-   offered — the local one does exactly that under `--readonly`: refused, it
+   offered — the local one does exactly that under `--no-edit`: refused, it
    reads instead and answers. Assert that such a call cannot *succeed*, not
    that it was never made.
 
