@@ -58,7 +58,7 @@ module Cogiteer::Tools
     # **An unrecognised name counts as writing.** The alternative — raising —
     # would turn a routine `shards update` into a CLI that will not start, on
     # nothing worse than the toolkit gaining an `ls`. Classifying it as a write
-    # still fails closed: it is kept out of `--readonly`, and offered to a run
+    # still fails closed: it is kept out of `--no-edit`, and offered to a run
     # that asked for everything.
     #
     # The forcing function lives in the suite instead. A spec asserts every
@@ -78,28 +78,24 @@ module Cogiteer::Tools
       CAPABILITIES[name]? || Capability::Write
     end
 
-    # Tools the CLI will not offer unless asked for by name.
+    # `names` narrows what is offered; `nil` offers everything `FsUtils` has,
+    # so a tool the toolkit gains arrives without a change here. An empty list
+    # offers nothing, which is a thing an operator can mean.
     #
-    # `fetch_as_markdown` leaves the machine, and `FsUtils` opens it to every
-    # public host unless a host policy narrows it. This project has nowhere to
-    # set one yet and no flag to turn it off, so offering it by default would
-    # ship egress as a side effect of a `shards update`.
+    # Two gates then apply to whatever `names` left, and both take precedence
+    # over it, because each exists to make a configured set safe for one run
+    # without editing the configuration. A set narrowed to one tool that a
+    # gate then drops offers nothing, which is the gate doing its job.
     #
-    # Temporary, and replaced rather than extended: when `defaults.web` and
-    # its flag exist, the decision moves there and this list goes. Naming the
-    # tool in `tools:` still offers it, so nothing is unreachable in the
-    # meantime — it is off by default, not absent.
-    WITHHELD = ["fetch_as_markdown"]
-
-    # `names` narrows what is offered; `nil` offers everything `FsUtils` has
-    # except `WITHHELD`, so a tool the toolkit gains arrives without a change
-    # here. An empty list offers nothing, which is a thing an operator can
-    # mean, and a name in `WITHHELD` is offered when asked for explicitly.
+    # `no_edit` drops anything declaring `Capability::Write`. What it protects
+    # is the user's files, so a tool writing only to the scratch directory
+    # survives it — and a tool that leaves the machine survives it too, since
+    # nothing here can promise what a request does at the far end.
     #
-    # `readonly` then drops anything declaring `Capability::Write`, and takes
-    # precedence —
-    # it exists to make a configured set safe for one run without editing the
-    # configuration.
+    # `web` admits anything declaring `Capability::Network`, and its default
+    # of false is the one asymmetry: every other gate here subtracts from what
+    # was asked for, and this one has to be asked for. Egress is not something
+    # a `shards update` should be able to turn on.
     #
     # `reproducible` drops the fields reporting *when and where* a call ran — a
     # walk's `elapsed_ms`, a find result's `modified` — leaving a response
@@ -117,7 +113,8 @@ module Cogiteer::Tools
     # something, with nothing to read explaining why.
     def self.toolbox(root : String = Dir.current,
                      names : Array(String)? = nil,
-                     readonly : Bool = false,
+                     no_edit : Bool = false,
+                     web : Bool = false,
                      reproducible : Bool = false) : Liaison::Toolbox
       config = FsUtils::Tools::Config.new
       config.reproducible = reproducible
@@ -131,11 +128,15 @@ module Cogiteer::Tools
           raise UnknownTool.new("no tool named #{name.inspect} — available: #{offered.join(", ")}")
         end
         definitions = definitions.select { |definition| names.includes?(definition.name) }
-      else
-        definitions = definitions.reject { |definition| WITHHELD.includes?(definition.name) }
       end
 
-      if readonly
+      unless web
+        definitions = definitions.reject do |definition|
+          capabilities(definition.name).includes?(Capability::Network)
+        end
+      end
+
+      if no_edit
         definitions = definitions.reject do |definition|
           capabilities(definition.name).includes?(Capability::Write)
         end

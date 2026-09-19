@@ -16,24 +16,24 @@ private def in_sandbox(& : String ->)
 end
 
 describe Cogiteer::Tools::Workspace do
-  it "offers everything the toolkit has, less what is withheld, when nothing narrows it" do
+  # Everything except the network tools, which `web` admits rather than
+  # `no_edit` dropping: that default is the one thing here an operator has to
+  # ask for, so the unnarrowed set is not the whole toolkit.
+  it "offers every local tool the toolkit has when nothing narrows it" do
     in_sandbox do |root|
       offered = Cogiteer::Tools::Workspace.toolbox(root).functions.map(&.name)
-      available = FsUtils::Tools.new(root).definitions.map(&.name)
-      expected = available - Cogiteer::Tools::Workspace::WITHHELD
+      local = FsUtils::Tools.new(root).definitions.map(&.name).reject do |name|
+        Cogiteer::Tools::Workspace.capabilities(name).includes?(Cogiteer::Tools::Capability::Network)
+      end
 
-      offered.sort.should eq expected.sort
-      Cogiteer::Tools::Workspace::WITHHELD.each { |name| offered.should_not contain name }
+      offered.sort.should eq local.sort
     end
   end
 
-  # Withheld is off by default, not absent: an operator who names it gets it.
-  # Without this the list would be indistinguishable from dropping the tool.
-  it "offers a withheld tool when it is named" do
+  it "offers everything when web is allowed" do
     in_sandbox do |root|
-      name = Cogiteer::Tools::Workspace::WITHHELD.first
-      offered = Cogiteer::Tools::Workspace.toolbox(root, names: [name]).functions.map(&.name)
-      offered.should eq [name]
+      offered = Cogiteer::Tools::Workspace.toolbox(root, web: true).functions.map(&.name)
+      offered.sort.should eq FsUtils::Tools.new(root).definitions.map(&.name).sort
     end
   end
 
@@ -46,6 +46,35 @@ describe Cogiteer::Tools::Workspace do
       classified = Cogiteer::Tools::Workspace::CAPABILITIES.keys
       FsUtils::Tools.new(root).definitions.map(&.name).each do |name|
         fail("#{name} is not classified in Workspace::CAPABILITIES") unless classified.includes?(name)
+      end
+    end
+  end
+
+  describe "web" do
+    it "keeps a network tool out of a set that named it" do
+      in_sandbox do |root|
+        toolbox = Cogiteer::Tools::Workspace.toolbox(root, names: ["fetch_as_markdown"])
+        toolbox.functions.should be_empty
+      end
+    end
+
+    it "offers a network tool that was named once web is allowed" do
+      in_sandbox do |root|
+        toolbox = Cogiteer::Tools::Workspace.toolbox(root, names: ["fetch_as_markdown"], web: true)
+        toolbox.functions.map(&.name).should eq ["fetch_as_markdown"]
+      end
+    end
+
+    # The two gates are independent, and the combination is the one an
+    # operator reaching for both would expect: read the web, touch nothing.
+    it "admits a network tool under no_edit" do
+      in_sandbox do |root|
+        offered = Cogiteer::Tools::Workspace
+          .toolbox(root, web: true, no_edit: true)
+          .functions.map(&.name)
+
+        offered.should contain "fetch_as_markdown"
+        offered.should_not contain "write_text_file"
       end
     end
   end
@@ -76,10 +105,10 @@ describe Cogiteer::Tools::Workspace do
     end
   end
 
-  describe "readonly" do
+  describe "no_edit" do
     it "drops every tool that writes" do
       in_sandbox do |root|
-        offered = Cogiteer::Tools::Workspace.toolbox(root, readonly: true).functions.map(&.name)
+        offered = Cogiteer::Tools::Workspace.toolbox(root, no_edit: true).functions.map(&.name)
 
         offered.should contain "read_text_file"
         offered.should_not contain "write_text_file"
@@ -89,8 +118,7 @@ describe Cogiteer::Tools::Workspace do
 
     # What it protects is the user's files, so a tool that writes only to the
     # scratch directory survives. Asserted on the classification rather than
-    # through `toolbox`, because `fetch_as_markdown` is withheld from the
-    # default offer and this is a statement about the table, not the offer.
+    # through `toolbox`, because this is a statement about the table.
     it "keeps a tool that writes only to scratch" do
       capabilities = Cogiteer::Tools::Workspace.capabilities("fetch_as_markdown")
 
@@ -111,7 +139,7 @@ describe Cogiteer::Tools::Workspace do
     it "overrides a named set that asked for a writing tool" do
       in_sandbox do |root|
         offered = Cogiteer::Tools::Workspace
-          .toolbox(root, names: ["read_text_file", "write_text_file"], readonly: true)
+          .toolbox(root, names: ["read_text_file", "write_text_file"], no_edit: true)
           .functions.map(&.name)
 
         offered.should eq ["read_text_file"]

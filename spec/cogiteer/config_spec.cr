@@ -55,6 +55,37 @@ describe Cogiteer::Config do
         Cogiteer::Config.from_yaml(base + "defaults: true\n")
       end
     end
+
+    describe "web" do
+      it "is none when absent" do
+        Cogiteer::Config.from_yaml(base).defaults.web?.should be_false
+      end
+
+      it "reads any" do
+        config = Cogiteer::Config.from_yaml(base + "defaults:\n  web: any\n")
+        config.defaults.web.should eq Cogiteer::WebAccess::Any
+        config.defaults.web?.should be_true
+      end
+
+      it "reads none" do
+        Cogiteer::Config.from_yaml(base + "defaults:\n  web: none\n").defaults.web?.should be_false
+      end
+
+      # `web: off` is the spelling someone will try, and YAML hands it over as
+      # a boolean. The message has to say which word to write instead, or the
+      # error is about types and the fix is not obvious.
+      it "refuses a bare off, and says what to write" do
+        expect_raises(Cogiteer::ConfigError, /none.*any/) do
+          Cogiteer::Config.from_yaml(base + "defaults:\n  web: off\n")
+        end
+      end
+
+      it "refuses an unrecognised mode" do
+        expect_raises(Cogiteer::ConfigError, /defaults.web/) do
+          Cogiteer::Config.from_yaml(base + "defaults:\n  web: sometimes\n")
+        end
+      end
+    end
   end
 
   describe ".from_yaml" do
