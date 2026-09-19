@@ -78,6 +78,29 @@ module Cogiteer::Tools
       CAPABILITIES[name]? || Capability::Write
     end
 
+    # A seam for the suite, and nothing else.
+    #
+    # `HostPolicy` refuses loopback unless `allow_private_hosts` is set, so a
+    # recorded fetch spec cannot reach its own fixture server. The setting
+    # lives on `FsUtils::Tools::Config`, which this project has no way to
+    # write — `SCOPE.md`'s toolkit-config item is that gap, deliberately
+    # deferred until the web tool ships.
+    #
+    # State rather than a parameter because the spec drives the CLI from
+    # `Commands::Start.run`, so it is not the caller of `toolbox` and has
+    # nothing to pass. Protected rather than public so it is not API: the
+    # suite reaches it by reopening this module, which is a thing a reader can
+    # find and a consumer cannot reach by accident.
+    #
+    # **Delete this when `toolkit:` lands.** The spec will set the host policy
+    # the way an operator would, and a seam that survives its replacement is
+    # how a project acquires two ways to do one thing.
+    @@allow_private_hosts = false
+
+    protected def self.allow_private_hosts=(value : Bool)
+      @@allow_private_hosts = value
+    end
+
     # `names` narrows what is offered; `nil` offers everything `FsUtils` has,
     # so a tool the toolkit gains arrives without a change here. An empty list
     # offers nothing, which is a thing an operator can mean.
@@ -118,6 +141,7 @@ module Cogiteer::Tools
                      reproducible : Bool = false) : Liaison::Toolbox
       config = FsUtils::Tools::Config.new
       config.reproducible = reproducible
+      config.fetch.allow_private_hosts = true if @@allow_private_hosts
       tools = FsUtils::Tools.new(root, config)
 
       definitions = tools.definitions

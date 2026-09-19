@@ -103,21 +103,21 @@ Nothing currently.
   retention policy before anyone has complained is how a CLI grows a cache
   nobody asked for.
 
-- **`fetch_as_markdown` has no recorded end-to-end spec.** The other tools each
-  have one; this one is covered at the `Workspace` level only. Wiretap does
-  intercept the fetch — it monkeypatches `HTTP::Client#exec`, which is what
-  `fsutils` now calls — so a recording is possible. Two things to settle first:
-  `HostPolicy` resolves the hostname before the request and Wiretap does not
-  intercept DNS, so replay still needs a resolver; and a public URL means
-  committing a copy of someone's page. A local fixture server answers both, the
-  way `fsutils`' own suite does, at the cost of `allow_private_hosts` in the
-  spec config.
+- **`Workspace` carries a protected seam so the fetch spec can reach its own
+  fixture server.** `HostPolicy` refuses loopback unless `allow_private_hosts`
+  is set, and this project cannot write `FsUtils::Tools::Config` — so
+  `@@allow_private_hosts` and a protected setter exist, reopened by
+  `spec/support/web_fixture.cr`. State rather than a parameter because the
+  spec drives `Commands::Start.run` and is not the caller of `toolbox`.
+  **Delete it when `toolkit:` lands**, and have the spec set the host policy
+  the way an operator would; a seam that survives its replacement is how a
+  project acquires two ways to do one thing.
 
-- **The `AGAIN` branch of the tool loop is exercised by one transcript and one
-  provider.** A model that ignores `tool_choice: None` is answered with
-  refusals and the turn stops. Ollama does that today because its
-  chat-completions endpoint does not implement the parameter; Gemini does it by
-  documented defect. If Ollama ever implements it, that branch loses its only
-  cheap coverage and the behaviour would need a Gemini recording to keep.
+- **The fetch transcripts hold a fixed port, and the fixture server binds it.**
+  `WebFixture::PORT` is a constant because Wiretap matches on the exact URL
+  and the prompt puts the same URL inside the deployment's request body, so a
+  found port would replay neither. The server runs only while recording. If
+  that port is ever taken on a recording machine, the number changes and both
+  fetch transcripts re-record.
 
 [liaison]: https://github.com/ModelArmy/liaison.cr
