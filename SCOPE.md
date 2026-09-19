@@ -56,13 +56,44 @@ Nothing currently.
   know what shape this project needed, so the reason for not raising it has
   expired.
 
-- **`defaults.web` has two states where the useful third is a host allowlist.**
-  `any` means any public host, which is a blunt thing to hand a model.
-  `FsUtils::Tools::Config::Fetch` already carries allow and deny lists, a
-  private-host switch, and size and time bounds — none of which this project
-  can set. `WebAccess` is an enum rather than a `Bool` so a third state has
-  somewhere to go, but nothing consumes one yet. Becomes real the first time
-  someone wants a run that may read one vendor's docs and nothing else.
+- **The toolkit's own settings are not reachable from `cogiteer.yaml`.**
+  `Workspace.toolbox` builds a bare `FsUtils::Tools::Config` and sets one
+  field. Every bound the toolkit carries — `find` and `grep` limits, read and
+  write sizes, the fetch host lists and timeout, where scratch lives — takes
+  its default, so an operator who wants a shallower grep or a run that may read
+  one vendor's docs and nothing else has nowhere to say so. `defaults.web`'s
+  two states are the visible symptom: `WebAccess` is an enum rather than a
+  `Bool` so a third state has somewhere to go, and nothing consumes one.
+
+  **Deferred until fetch integration is released, deliberately.** It is a
+  config-surface decision rather than a tool detail, and folding it into the
+  fetch work would decide it in passing. The shape it should probably take,
+  recorded so the argument does not have to be had twice:
+
+  - A **third top-level table**, sibling to `servers:` and `deployments:` —
+    `toolkit:`, not a key under `defaults:`. `defaults` is how the CLI behaves
+    and every key there pairs with a flag of the same name; nested per-tool
+    bounds cannot pair with a flag and should not force an exception to the
+    rule. It also cannot go under `defaults.tools`, which already means *which
+    tools to offer* — one key with two meanings depending on whether a list or
+    a mapping follows is the shape `docs/DESIGN.md` refuses elsewhere.
+  - **Deserialised straight into `FsUtils::Tools::Config`**, which is already
+    `YAML::Serializable` with a section per tool. Exposing a curated subset
+    under our own key names reads nicer and makes every bound the shard adds or
+    renames a change here, plus a translation table between two files that must
+    be kept in step.
+  - **Ownership line:** `cogiteer` decides whether a tool is offered (`tools`,
+    `web`, `--no-edit`, `max_tool_calls`); `fsutils` decides how it behaves
+    once offered. Fields this project drives — `reproducible` — are overwritten
+    after deserialising, so a flag never loses silently to a file.
+
+  Three traps to handle when it is built. `YAML::Serializable` ignores
+  unrecognised keys, so a misspelled bound would parse and do nothing, where
+  every parser here raises with the key named. Errors would arrive as
+  `YAML::ParseException` about a type rather than a `ConfigError` naming a key
+  in `cogiteer.yaml`. And `web: any` stops being literally true once an
+  allowlist exists — it would mean *offer the tool, the policy decides where*,
+  which either gets documented or gets a better word.
 
 - **Nothing prunes the scratch directory.** A long fetch writes into
   `.agent-scratch/` under the working directory and leaves it there, across
