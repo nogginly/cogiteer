@@ -1,5 +1,5 @@
 require "http/server"
-require "../../src/cogiteer/tools/workspace"
+require "../../src/cogiteer/tools/offering"
 
 # The suite's own web server, and the seam that lets a turn reach it.
 #
@@ -50,7 +50,7 @@ module WebFixture
     Wiretap.config.record_mode == :once
   end
 
-  # Opens the protected seam on `Workspace` for the duration of the block.
+  # Opens the protected seam on `Offering` for the duration of the block.
   #
   # Reopening the module is what makes the protected setter reachable: the
   # call is inside the namespace that declared it, rather than a public
@@ -58,11 +58,11 @@ module WebFixture
   # process-wide state and a leak would quietly permit loopback in every
   # example that ran afterwards.
   def self.allowing_private_hosts(&)
-    Cogiteer::Tools::Workspace.permit_private_hosts(true)
+    Cogiteer::Tools::Offering.permit_private_hosts(true)
     begin
       yield
     ensure
-      Cogiteer::Tools::Workspace.permit_private_hosts(false)
+      Cogiteer::Tools::Offering.permit_private_hosts(false)
     end
   end
 
@@ -82,9 +82,9 @@ module WebFixture
   end
 end
 
-# The suite's half of the seam `Workspace` documents: inside the module, so
+# The suite's half of the seam `Offering` documents: inside the module, so
 # the protected setter is reachable, and nowhere near the shipped API.
-module Cogiteer::Tools::Workspace
+module Cogiteer::Tools::Offering
   def self.permit_private_hosts(value : Bool) : Nil
     self.allow_private_hosts = value
   end

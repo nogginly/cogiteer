@@ -128,7 +128,7 @@ fetch comes from the transcript, so a machine already using the port is not a
 failing suite. Change the page and the transcript, not the server, is what a
 replay still believes.
 
-`Workspace` carries a protected `allow_private_hosts` seam so that fetch can
+`Offering` carries a protected `allow_private_hosts` seam so that fetch can
 reach loopback at all, reopened by the fixture. It is temporary and
 `SCOPE.md` says when it goes — if you are reading this after `toolkit:` landed
 and the seam is still here, that is the bug.
@@ -146,7 +146,7 @@ proves only that the config worked.
 fixtures must not be edited. Each part of the copy's location is load-bearing:
 
 1. **A fixed folder inside the repo, `tmp/tool_scratch/<id>/`**, gitignored by
-   `tmp*`. Not `Dir.tempdir`: the sandbox root is the working directory, so a
+   `tmp*`. Not `Dir.tempdir`: the workspace root is the working directory, so a
    path outside the repo is refused, and a random name lands in the prompt, the
    call's arguments and the result — a body that never replays.
 2. **`<id>` is the spec's transcript name.** One unique name, already required
@@ -235,15 +235,16 @@ it is only convenient for this application, this application owns it.
 Two live examples of the second case. The `MPSH::Object` to
 `Hash(String, JSON::Any)` conversion stays in `src/cogiteer/tools/arguments.cr`
 because both libraries made the correct local choice and closing the seam would
-break one of them. The capability classification in `Workspace::CAPABILITIES`
-stays here because `Definition` carries no notion of whether a tool writes —
-though that one *would* pass the test, and is worth raising with `fsutils` once
-it is clear what shape it wants.
+break one of them. The capability classification went the other way: it passed
+the test, was raised with `fsutils`, and landed in 0.4.0 as a required field on
+`Definition`. The table, its fail-closed default and the spec that forced it
+are all gone from here.
 
-**An unrecognised tool counts as writing, and the forcing function is a spec.**
-Raising would turn a routine `shards update` into a CLI that will not start.
-`workspace_spec.cr` asserts every definition is classified, so a new tool fails
-this project's tests on the update that introduces it.
+**A new tool arrives classified, and the compiler is the forcing function.**
+`fsutils` declares capabilities on each `Definition` and the field is required,
+so a tool added there cannot reach a host unclassified. This project used to
+carry a fail-closed table and a spec asserting it was complete; both are gone,
+and nothing here needs re-deciding when the toolkit grows.
 
 ## Deferred, and staying deferred
 
@@ -253,7 +254,7 @@ later tool built on the same shard — not a reason to complicate this one.
 `docs/DESIGN.md`'s *What this is, and what it deliberately is not* is the
 argument.
 
-Still deferred from the tool work: an operator-settable sandbox root (the root
+Still deferred from the tool work: an operator-settable workspace root (the root
 is the working directory, and specs rely on that), and a config key for the
 message a refused call carries (`Query::CONTINUATION`, overridable through the
 API only).

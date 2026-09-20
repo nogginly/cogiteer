@@ -33,7 +33,7 @@ Nothing currently.
   setting, which is not a reasonable thing to expect. Intrinsic to a
   cross-provider session tool, so reasoning will not be the last instance.
 
-- **The sandbox root is the working directory, and nothing can move it.**
+- **The workspace root is the working directory, and nothing can move it.**
   Deliberate for now: the tools are for the project someone is standing in, and
   the specs rely on it — a settable root would let a spec point somewhere
   convenient, which is how `Dir.cd` crept in and broke Wiretap's relative
@@ -47,17 +47,8 @@ Nothing currently.
   exception for operator prose, or a second such setting to justify the shape.
   Neither is worth inventing for one string.
 
-- **`Workspace::CAPABILITIES` classifies tools that `fsutils` could classify
-  itself.** `Definition` carries a name, a description and a schema, and says
-  nothing about what a tool touches — so every host offering a restricted mode
-  hardcodes the same table. That passes the test for belonging in the shard.
-  Now stronger than when it was written: the table has four members rather than
-  two, and `fetch_as_markdown` proved a host cannot infer them from a name. We
-  know what shape this project needed, so the reason for not raising it has
-  expired.
-
 - **The toolkit's own settings are not reachable from `cogiteer.yaml`.**
-  `Workspace.toolbox` builds a bare `FsUtils::Tools::Config` and sets one
+  `Offering.toolbox` builds a bare `FsUtils::Tools::Config` and sets one
   field. Every bound the toolkit carries — `find` and `grep` limits, read and
   write sizes, the fetch host lists and timeout, where scratch lives — takes
   its default, so an operator who wants a shallower grep or a run that may read
@@ -103,7 +94,7 @@ Nothing currently.
   retention policy before anyone has complained is how a CLI grows a cache
   nobody asked for.
 
-- **`Workspace` carries a protected seam so the fetch spec can reach its own
+- **`Offering` carries a protected seam so the fetch spec can reach its own
   fixture server.** `HostPolicy` refuses loopback unless `allow_private_hosts`
   is set, and this project cannot write `FsUtils::Tools::Config` — so
   `@@allow_private_hosts` and a protected setter exist, reopened by

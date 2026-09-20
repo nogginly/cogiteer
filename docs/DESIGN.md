@@ -580,7 +580,7 @@ returns. Recorded so it is not rediscovered as a bug.
 ## Deliberately deferred, not forgotten
 
 - **Tool execution.** Built; see *Tools* below. What is still deferred from it:
-  an operator-settable sandbox root, and a config key for the message a refused
+  an operator-settable workspace root, and a config key for the message a refused
   call carries.
 
 ## Tools
@@ -600,14 +600,14 @@ It does not, because that layer contains no tool calling. There is no protocol
 in it, no dispatch loop, no turn, no `is_error`, no notion of a model reply —
 `Definition` deliberately hands over three plain strings rather than a
 vendor-shaped blob, and `Tools#call` takes named arguments and returns a
-response. What the layer actually holds is sandbox confinement, strict argument
+response. What the layer actually holds is workspace confinement, strict argument
 extraction, an output-byte budget, a common envelope, and the prose a model
 reads when something goes wrong.
 
 None of that is specific to this application, and all of it is work the next
 host would repeat. Writing it here would move roughly 1,700 lines and 1,500
-lines of its tests into a place where nobody is watching them, the sandbox
-most of all: resolve-then-compare, a separator check so `/srv/project-secrets`
+lines of its tests into a place where nobody is watching them, the
+confinement most of all: resolve-then-compare, a separator check so `/srv/project-secrets`
 cannot pass for root `/srv/project`, canonicalising only the existing prefix so
 a missing file reports honestly. Reimplementing that is the same work done once
 more, less well tested.
@@ -744,46 +744,43 @@ Naming a tool a gate then drops offers nothing rather than raising. It is the
 same decision as `--no-edit` beating `tools`, read one step further: a gate
 that a config could argue with is not a gate.
 
-Whether a tool writes is declared in `Workspace::CAPABILITIES`, because
-`FsUtils::Definition` says nothing about it. **A name missing from that table
-counts as writing.** This looks like an oversight and is not.
+Whether a tool writes is declared by `fsutils`, on the `Definition` itself.
+This project kept its own table until 0.4.0 and no longer does, which removed
+more than the table.
 
-Option                  |After `shards update` adds a tool                           
-------------------------|------------------------------------------------------------
-Raise on an unknown name|The CLI will not start, for every command                   
-Count it as reading     |`--no-edit` offers a tool that might write                  
-**Count it as writing** |Kept out of `--no-edit`; offered to a run that asked for all
+### Capabilities are the shard's to declare, not this project's to guess
 
-Raising punishes the user for a decision the maintainer has not made yet.
-Counting it as reading fails open on the one flag whose whole promise is not
-failing open. Counting it as writing fails closed and keeps working.
+The table here mapped tool names to what they touched, and every host offering
+a restricted mode had to keep the same one. Two things made it the shard's:
+whether `text_replace` writes is a fact about `text_replace` rather than a
+matter of local taste, and a host cannot infer it — nothing in
+`fetch_as_markdown`'s name says it spills large pages onto disk.
 
-The decision still gets made, and the suite forces it: `workspace_spec.cr`
-asserts every definition is classified, so the update that introduces a tool
-fails this project's tests — which is when someone should decide what it is,
-rather than when a user meets it.
+Member          |Means                                                               
+----------------|--------------------------------------------------------------------
+`WorkspaceRead` |Workspace content reaches the caller                                
+`WorkspaceWrite`|Changes files the user owns — the thing an operator is protecting   
+`ScratchWrite`  |Writes only inside a directory the tool created and nobody asked for
+`Network`       |Leaves the machine                                                  
 
-### Four capabilities, because one enum was carrying two questions
+Three things this deleted, all of them workarounds for a fact the shard would
+not state:
 
-`Capability` began as `Read` and `Write` over one tree, which held for exactly
-as long as every tool was a filesystem tool. `fetch_as_markdown` broke it in
-two directions at once: it leaves the machine, and when a page is too large to
-return inline it writes the content to a scratch directory. Classified with
-what existed, it was either a read — and `--readonly` would have handed a model
-egress and a file it could create — or a write, and the most useful thing a
-no-edit run could do would have been unavailable.
+1. **The fail-closed default.** An unclassified name counted as writing, so a
+   `shards update` could not stop the CLI starting. A required field on
+   `Definition` means there is no unclassified name to have a policy about.
+2. **The forcing spec.** `workspace_spec.cr` asserted every definition was
+   classified, so a new tool failed *this* project's tests. The compiler now
+   does that in the shard, once, for every host.
+3. **The reading half of two classifications.** `fsutils` declares
+   `WorkspaceWrite` alone for `write_text_file`, where this project had guessed
+   `Read | Write` — `WorkspaceRead` means content reaches the caller, and a
+   write returns a path and a byte count. It changes nothing here, because the
+   gate tests what a tool *changes* and never what it reads.
 
-Member   |Means                                                               
----------|--------------------------------------------------------------------
-`Read`   |Reads the tree                                                      
-`Write`  |Changes files the user owns — the thing an operator is protecting   
-`Scratch`|Writes only inside a directory the tool created and nobody asked for
-`Network`|Leaves the machine                                                  
-
-The table says what a tool *touches*; which of those an operator allows is the
-flags' question. Keeping them apart is what lets `workspace_spec.cr` check the
-table against the toolkit, and what made `--no-edit` need no change when
-`Network` arrived: it already tested the member it meant.
+The declarations say what a tool *touches*; which of those an operator allows
+is the flags' question, and keeping them apart is what made `--no-edit` need no
+change when `Network` arrived: it already tested the capability it meant.
 
 ### `--readonly` became `--no-edit`, because the old word claimed too much
 
@@ -823,7 +820,7 @@ spec.
 
 ### Built per invocation, never memoised
 
-`FsUtils::Tools` fixes its sandbox root at construction, and `Liaison::Function`
+`FsUtils::Tools` fixes its workspace root at construction, and `Liaison::Function`
 warns separately that instances outlive a call and leak between sessions. This
 process runs one session and exits, which makes a memoised toolbox safe by
 accident. `Query.run` builds it instead, so it is safe on purpose.
