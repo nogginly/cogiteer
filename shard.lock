@@ -6,7 +6,7 @@ shards:
 
   fsutils:
     git: https://github.com/nogginly/fsutils.cr.git
-    version: 0.3.2+git.commit.945a57aaf13186af27b1d8136fe7985ac1bc2663
+    version: 0.4.0+git.commit.28c2fc25408fb146034b859f134bc2961cea51d8
 
   html5:
     git: https://github.com/naqvis/crystal-html5.git
