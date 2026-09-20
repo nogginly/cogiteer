@@ -101,13 +101,13 @@ flowchart TD
     R --> C{Tool calls in the reply?}
     C -- no --> A[Answer]
     C -- yes --> B{Budget left?}
-    B -- yes --> X[Run them in the sandbox]
+    B -- yes --> X[Run them in the workspace]
     X --> R
     B -- no --> F[Refuse, and ask for a closing summary]
     F --> A
 ```
 
-- **The sandbox is the working directory.** Every path a model supplies is
+- **The workspace is the working directory.** Every path a model supplies is
   resolved against it and compared, so `..` and symlinks cannot launder a path
   out of the tree. Nothing moves the root; the tools are for the project you
   are standing in.

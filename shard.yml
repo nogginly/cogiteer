@@ -19,6 +19,7 @@ dependencies:
     github: modelarmy/liaison.cr
   fsutils:
     github: nogginly/fsutils.cr
+    version: ">= 0.4.0"
   socket_connect_fix:
     # Need this to address a socket connection problem in Crystal
     # associated with some OS updates; will remove when no longer needed.

@@ -2,7 +2,7 @@ require "liaison"
 require "./display"
 require "./output"
 require "./progress"
-require "./tools/workspace"
+require "./tools/offering"
 
 module Cogiteer
   # Both `start` and `continue` are this, differing only in whether `session`
@@ -41,7 +41,7 @@ module Cogiteer
     # has not been taught about tools does not silently acquire them.
     #
     # The toolbox is built here rather than passed in, because `FsUtils::Tools`
-    # fixes its sandbox root at construction and a toolbox that outlived one
+    # fixes its workspace root at construction and a toolbox that outlived one
     # invocation would carry that root into the next.
     #
     # The returned report is the last exchange's. Every request in a turn
@@ -63,7 +63,7 @@ module Cogiteer
 
       client = Liaison::Client.new(provider)
       toolbox = if max_tool_calls > 0
-                  Tools::Workspace.toolbox(names: tool_names, no_edit: no_edit_tools,
+                  Tools::Offering.toolbox(names: tool_names, no_edit: no_edit_tools,
                     web: web_tools, reproducible: reproducible_tools)
                 end
       waiting = indicator.try(&.label)
