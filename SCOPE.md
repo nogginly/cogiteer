@@ -18,7 +18,17 @@ mapper, an exporter or the archive format, it is not this file's.
 
 ## MUST FIX
 
-Nothing currently.
+- **Only `toolkit:` refuses a key it does not recognise.** Every other parser in
+  `config.cr` reads the keys it knows and ignores the rest: the top level,
+  `defaults`, each server and deployment entry, and a server's `azure` block. A
+  misspelled `streamng:` parses and does nothing, and so does a misspelled
+  `toolkt:` — which means the strictness `toolkit:` gained does not survive a
+  typo in its own name. Cheap now because the hand-written parsers already know
+  their keys and only need to check the remainder; each message should name the
+  key, where it sat, and what was expected, as `toolkit:`'s do. The argument for
+  refusing at all is in `DESIGN.md` under *Unknown keys raise here*, and applies
+  with less force to a flag than to a bound — but a config that means one thing
+  and reads as another is the same fault in either table.
 
 ---
 
@@ -61,5 +71,14 @@ Nothing currently.
   found port would replay neither. The server runs only while recording. If
   that port is ever taken on a recording machine, the number changes and both
   fetch transcripts re-record.
+
+- **Nothing tells an operator what the offered tools do to their machine.**
+  `--no-edit` and `--web` are the controls, and learning which tools each one
+  moves means reading `DESIGN.md` or running a turn. The answer is now free —
+  each `Definition` declares its capabilities, so a listing cannot drift the way
+  a hand-kept table would. Most likely a flag on `show` or a small verb printing
+  each offered tool against what it touches, run against a deployment's config
+  so it answers "what does this profile let a model do". A convenience, not a
+  gap: nothing is wrong without it.
 
 [liaison]: https://github.com/ModelArmy/liaison.cr
