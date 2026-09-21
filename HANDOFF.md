@@ -6,13 +6,13 @@ rather than restates.
 
 ## Read in this order
 
-Document                           |Why                                                                                   
------------------------------------|--------------------------------------------------------------------------------------
-`docs/DESIGN.md`                   |Authoritative for this tool: config, session storage, verb grammar, tools, and why    
-`SCOPE.md`                         |The worklist. Every open question, each with the trap that makes it awkward           
-`README.md`                        |The front door: what the tool is for, and the handoff in ten lines                    
-[`liaison`][liaison]'s `HANDOFF.md`|The shard underneath. Its `docs/MPSH_SPECIFICATION.md` is authoritative for the format
-[`fsutils`][fsutils]'s `DESIGN.md` |The filesystem toolkit. Authoritative for what the tools do and refuse                
+Document                           |Why                                                                                     
+-----------------------------------|----------------------------------------------------------------------------------------
+`docs/DESIGN.md`                   |Authoritative for this tool: why config, storage, verbs and tools are shaped as they are
+`SCOPE.md`                         |The worklist. Every open question, each with the trap that makes it awkward             
+`README.md`                        |The front door, and the one catalogue of every config key, its default and its flag     
+[`liaison`][liaison]'s `HANDOFF.md`|The shard underneath. Its `docs/MPSH_SPECIFICATION.md` is authoritative for the format  
+[`fsutils`][fsutils]'s `DESIGN.md` |The filesystem toolkit. Authoritative for what the tools do and refuse                  
 
 Where this file and `docs/DESIGN.md` disagree, the design document wins. Where
 either disagrees with the MPSH specification about the *format*, the
@@ -92,18 +92,24 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**All six `fsutils` tools now have recorded end-to-end specs**, one per tool,
+**Start with `SCOPE.md`'s one MUST FIX: only `toolkit:` refuses an unknown
+key.** Every other config parser ignores keys it does not recognise, including
+at the top level, so a misspelled `toolkt:` undoes the strictness that table
+has. `src/cogiteer/toolkit.cr` is the model for the messages; the hand-written
+parsers already know their keys, so each needs only to check the remainder.
+Config parsing touches no request body, so nothing should re-record.
+
+**All six `fsutils` tools have recorded end-to-end specs**, one per tool,
 plus `write_text_file`'s two calling patterns and `--no-web`'s refusal as
-separate examples. Nothing in the tool work is outstanding; what remains in
-`SCOPE.md` is configuration surface, not coverage. What follows is for whoever
-adds a seventh tool, or changes one of these.
+separate examples. Nothing in the tool work is outstanding. What follows is for
+whoever adds a seventh tool, or changes one of these.
 
 **A tool is not integrated when it runs; it is integrated when someone has
 decided what it may do.** `fetch_as_markdown` took four questions that a
-filesystem tool never raised: what it touches (`Capability` went from two
-members to four), whether a flag named `--readonly` could honestly cover it (it
+filesystem tool never raised: what it touches (the capability enum went from two
+members to four, and has since moved into `fsutils`), whether a flag named `--readonly` could honestly cover it (it
 could not, and is now `--no-edit`), whether a dependency update may turn on
-egress (no — `defaults.web` is `none`), and who cleans up the scratch directory
+egress (no — `defaults.web` is `false`), and who cleans up the scratch directory
 it leaves in the user's project (the user, said plainly in `README.md`). Expect
 the next non-filesystem tool to raise its own.
 
@@ -128,7 +134,9 @@ fetch comes from the transcript, so a machine already using the port is not a
 failing suite. Change the page and the transcript, not the server, is what a
 replay still believes.
 
-The fetch spec permits loopback the way an operator would, through a `toolkit:` block in its own fixture config. There is no seam in the source for it, and there should not be one again.
+The fetch spec permits loopback the way an operator would, through a
+`toolkit:` block in its own fixture config (`WebFixture::TOOLKIT`). There is no
+seam in the source for it, and there should not be one again.
 
 **Every verb parses its own flags, so every verb is covered separately.**
 `start` and `continue` keep independent `OptionParser` blocks with overlapping
@@ -213,9 +221,13 @@ individually for review, and let the maintainer run it.
   a union Crystal treats as a different type — and **a variable captured by an
   `OptionParser` block never narrows out of its nilable type**, so copy it into
   a local before testing it. Both are documented at their sites.
-- **`shards update` after a dependency changes.** `shard.lock` pins a commit,
-  and neither shard is version-constrained. A missing method on a shard type is
-  usually a stale lock, not a wrong API.
+- **Present every file touched, including one-line edits.** A call site left
+  unpresented once let a new config table parse and then go nowhere, and the
+  symptom was a transcript mismatch pointing at the wrong thing.
+- **`shards update` after a dependency changes.** `shard.lock` pins a commit.
+  `fsutils` is constrained to `>= 0.4.0`, since its capabilities are required
+  here; `liaison` is not constrained at all and tracks its default branch. A
+  missing method on a shard type is usually a stale lock, not a wrong API.
 - **`ops test`** runs specs, builds and lints. Green means all three. Ameba
   rejects `d` and `it` as block parameter names.
 - **Transcripts replay offline**, `:none` in CI. `Wiretap.verify!` raises at end
@@ -229,7 +241,7 @@ all three were accepted. The test that made them acceptable is worth keeping:
 **would the next host write the same thing?** If yes it belongs in the shard; if
 it is only convenient for this application, this application owns it.
 
-Two live examples of the second case. The `MPSH::Object` to
+Two live examples, one each way. The `MPSH::Object` to
 `Hash(String, JSON::Any)` conversion stays in `src/cogiteer/tools/arguments.cr`
 because both libraries made the correct local choice and closing the seam would
 break one of them. The capability classification went the other way: it passed
