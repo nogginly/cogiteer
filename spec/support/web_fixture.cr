@@ -1,11 +1,10 @@
 require "http/server"
-require "../../src/cogiteer/tools/offering"
 
-# The suite's own web server, and the seam that lets a turn reach it.
+# The suite's own web server, and the config that lets a turn reach it.
 #
 # ```
 # WebFixture.serving do |base|
-#   WebFixture.allowing_private_hosts do
+#   ToolHarness.with_config(ToolHarness.ollama(50, TOOLS, WebFixture::TOOLKIT)) do
 #     Wiretap.intercept(ID) { Cogiteer::Commands::Start.run([..., "#{base}/small"]) }
 #   end
 # end
@@ -24,6 +23,18 @@ module WebFixture
   PORT = 47_231
 
   BASE = "http://127.0.0.1:#{PORT}"
+
+  # `HostPolicy` refuses loopback unless told otherwise, so a recorded fetch
+  # spec cannot reach this server without saying so. Written as config rather
+  # than reached through a seam in the source: this is exactly what an
+  # operator pointing the tool at a local service would put in their own
+  # `cogiteer.yaml`, and a spec that takes a different route tests a path
+  # nobody else can take.
+  TOOLKIT = <<-YAML
+    toolkit:
+      fetch:
+        allow_private_hosts: true
+    YAML
 
   # Runs the block with the server up, and only when recording.
   #
@@ -50,20 +61,29 @@ module WebFixture
     Wiretap.config.record_mode == :once
   end
 
-  # Opens the protected seam on `Offering` for the duration of the block.
+  # Runs the block with the server up, and only when recording.
   #
-  # Reopening the module is what makes the protected setter reachable: the
-  # call is inside the namespace that declared it, rather than a public
-  # setting anything could reach. Restored in an `ensure`, because this is
-  # process-wide state and a leak would quietly permit loopback in every
-  # example that ran afterwards.
-  def self.allowing_private_hosts(&)
-    Cogiteer::Tools::Offering.permit_private_hosts(true)
+  # On replay Wiretap answers the fetch from disk, so nothing binds a port and
+  # a machine already using it is not a failing suite. That also means the
+  # pages below are only ever consulted at record time: change one and the
+  # transcript, not the server, is what a replay still believes.
+  def self.serving(&)
+    return yield BASE unless recording?
+
+    server = HTTP::Server.new { |context| respond(context) }
+    server.bind_tcp("127.0.0.1", PORT)
+    spawn { server.listen }
+    Fiber.yield
+
     begin
-      yield
+      yield BASE
     ensure
-      Cogiteer::Tools::Offering.permit_private_hosts(false)
+      server.close
     end
+  end
+
+  def self.recording? : Bool
+    Wiretap.config.record_mode == :once
   end
 
   private def self.respond(context : HTTP::Server::Context) : Nil
@@ -79,13 +99,5 @@ module WebFixture
       response.status_code = 404
       response.print "<html><body>gone</body></html>"
     end
-  end
-end
-
-# The suite's half of the seam `Offering` documents: inside the module, so
-# the protected setter is reachable, and nowhere near the shipped API.
-module Cogiteer::Tools::Offering
-  def self.permit_private_hosts(value : Bool) : Nil
-    self.allow_private_hosts = value
   end
 end

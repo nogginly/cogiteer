@@ -141,7 +141,7 @@ flowchart TD
 ### Reaching the web
 
 `fetch_as_markdown` fetches a page and converts it to Markdown. It is **off by
-default** and needs `web: any` under `defaults`, or `--web` for one run; today
+default** and needs `web: true` under `defaults`, or `--web` for one run; today
 that means any public host, so turning it on is a decision rather than a
 detail. `--no-web` refuses it whatever the config says.
 
@@ -187,7 +187,7 @@ defaults:
   show_reasoning: false
   max_tool_calls: 50
   reproducible_tools: false
-  web: none                               # or 'any' to allow web fetches
+  web: false                              # true allows web fetches
   # tools: [read_text_file, find_files]   # absent offers every local tool
 ```
 

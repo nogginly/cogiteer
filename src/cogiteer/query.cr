@@ -58,13 +58,14 @@ module Cogiteer
             tool_names : Array(String)? = nil,
             no_edit_tools : Bool = false,
             web_tools : Bool = false,
+            toolkit : FsUtils::Tools::Config = FsUtils::Tools::Config.new,
             continuation : String = CONTINUATION) : {Liaison::MPSH::Message, Liaison::Capability::Report}
       session << Liaison::MPSH::Message.user(prompt)
 
       client = Liaison::Client.new(provider)
       toolbox = if max_tool_calls > 0
                   Tools::Offering.toolbox(names: tool_names, no_edit: no_edit_tools,
-                    web: web_tools, reproducible: reproducible_tools)
+                    web: web_tools, reproducible: reproducible_tools, toolkit: toolkit)
                 end
       waiting = indicator.try(&.label)
       remaining = max_tool_calls

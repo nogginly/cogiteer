@@ -1079,3 +1079,52 @@ never been. Channels are now made per `start`.
 [fsutils]: https://github.com/nogginly/fsutils.cr
 [tool-execution]: https://github.com/ModelArmy/liaison.cr/blob/main/docs/TOOL_EXECUTION.md
 [streaming-design]: https://github.com/ModelArmy/liaison.cr/blob/main/docs/STREAMING_DESIGN.md
+
+### `toolkit:` is a third top-level table, not a key under `defaults:`
+
+Every key under `defaults:` pairs with a flag of the same name, so there is no
+translation table between the config and `--help`. Nested per-tool bounds
+cannot pair with a flag, and a `max_depth` under `defaults` would be the first
+key there with nothing behind it — which is how that section becomes a junk
+drawer. It also cannot go under `defaults.tools`, which already means *which
+tools to offer*: one key meaning two things depending on whether a list or a
+mapping follows is a shape refused elsewhere in this document.
+
+The table deserialises straight into `FsUtils::Tools::Config` rather than being
+curated under local key names. A curated subset reads nicer and costs a
+translation table between two files that must be kept in step, plus a change
+here for every bound the shard adds or renames. `Arguments` is the only other
+place this project stands between itself and `fsutils`, and it exists to
+preserve pass-through rather than to interpret.
+
+**The ownership line.** `cogiteer` decides whether a tool is offered — `tools`,
+`web`, `--no-edit`, `max_tool_calls`. `fsutils` decides how it behaves once
+offered. The one field this project drives is `reproducible`, overwritten after
+parsing so a flag never loses silently to a file.
+
+### Unknown keys raise here, where `defaults` lets them pass
+
+`YAML::Serializable` ignores keys it does not recognise, and so, as it happens,
+does the hand-written parser for `defaults`: a misspelled `streamng:` parses
+today and does nothing. `toolkit:` departs from that deliberately. A misspelled
+flag is visible in what the CLI does; a misspelled bound is visible nowhere,
+because the tool goes on working at a limit nobody chose.
+
+The known-key set is derived from `FsUtils::Tools::Config` at compile time
+rather than written out, so a bound the shard adds is accepted the day the lock
+moves and none of this needs editing. `YAML::Serializable::Strict` would have
+raised too, but in the shard's vocabulary rather than in `cogiteer.yaml`'s.
+
+### `web` became a boolean when its third state found a home
+
+`web` was `none` or `any`, an enum rather than a `Bool` because the third state
+— an allowlist of hosts — was the one an operator would eventually want, and a
+boolean had nowhere to put it. `toolkit.fetch.allowed_hosts` is that home, and
+it is the right one: an allowlist bounds how the tool behaves, not whether it
+is offered.
+
+`any` was also overclaiming. The default host policy refuses loopback and
+private address ranges, so `any` has never meant any host — which is why the
+fetch spec needed a way to permit them at all. A boolean says the one thing
+this key decides, and `web: off` now means false rather than being an error
+about which word to write instead.

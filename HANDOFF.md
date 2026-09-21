@@ -26,7 +26,7 @@ session on disk. `docs/DESIGN.md` carries the argument for each.
 
 **Tool execution is built.** A turn offers the [`fsutils`][fsutils] filesystem
 tools, rooted at the working directory, and runs them in a bounded loop. A
-sixth tool, `fetch_as_markdown`, reaches the web and is off unless `web: any`
+sixth tool, `fetch_as_markdown`, reaches the web and is off unless `web: true`
 or `--web` asks for it.
 `docs/DESIGN.md`'s *Tools* section is the argument; the summary is that the
 ceiling counts calls rather than rounds, a round too large is split rather than
@@ -128,10 +128,7 @@ fetch comes from the transcript, so a machine already using the port is not a
 failing suite. Change the page and the transcript, not the server, is what a
 replay still believes.
 
-`Offering` carries a protected `allow_private_hosts` seam so that fetch can
-reach loopback at all, reopened by the fixture. It is temporary and
-`SCOPE.md` says when it goes — if you are reading this after `toolkit:` landed
-and the seam is still here, that is the bug.
+The fetch spec permits loopback the way an operator would, through a `toolkit:` block in its own fixture config. There is no seam in the source for it, and there should not be one again.
 
 **Every verb parses its own flags, so every verb is covered separately.**
 `start` and `continue` keep independent `OptionParser` blocks with overlapping

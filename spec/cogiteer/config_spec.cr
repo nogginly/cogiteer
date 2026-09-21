@@ -57,30 +57,27 @@ describe Cogiteer::Config do
     end
 
     describe "web" do
-      it "is none when absent" do
+      it "is off when absent" do
         Cogiteer::Config.from_yaml(base).defaults.web?.should be_false
       end
 
-      it "reads any" do
-        config = Cogiteer::Config.from_yaml(base + "defaults:\n  web: any\n")
-        config.defaults.web.should eq Cogiteer::WebAccess::Any
-        config.defaults.web?.should be_true
+      it "reads true" do
+        Cogiteer::Config.from_yaml(base + "defaults:\n  web: true\n").defaults.web?.should be_true
       end
 
-      it "reads none" do
-        Cogiteer::Config.from_yaml(base + "defaults:\n  web: none\n").defaults.web?.should be_false
+      it "reads false" do
+        Cogiteer::Config.from_yaml(base + "defaults:\n  web: false\n").defaults.web?.should be_false
       end
 
-      # `web: off` is the spelling someone will try, and YAML hands it over as
-      # a boolean. The message has to say which word to write instead, or the
-      # error is about types and the fix is not obvious.
-      it "refuses a bare off, and says what to write" do
-        expect_raises(Cogiteer::ConfigError, /none.*any/) do
-          Cogiteer::Config.from_yaml(base + "defaults:\n  web: off\n")
-        end
+      # `off` and `yes` are booleans to YAML 1.1, and this key is a boolean, so
+      # they now mean what they look like. They were an error while the value
+      # was a word.
+      it "reads the boolean spellings YAML allows" do
+        Cogiteer::Config.from_yaml(base + "defaults:\n  web: off\n").defaults.web?.should be_false
+        Cogiteer::Config.from_yaml(base + "defaults:\n  web: yes\n").defaults.web?.should be_true
       end
 
-      it "refuses an unrecognised mode" do
+      it "refuses a word" do
         expect_raises(Cogiteer::ConfigError, /defaults.web/) do
           Cogiteer::Config.from_yaml(base + "defaults:\n  web: sometimes\n")
         end

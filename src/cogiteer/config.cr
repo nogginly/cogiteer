@@ -2,6 +2,8 @@ require "socket_connect_fix"
 require "yaml"
 require "liaison"
 
+require "./toolkit"
+
 module Cogiteer
   class ConfigError < Exception
   end
@@ -108,24 +110,6 @@ module Cogiteer
     end
   end
 
-  # Whether a turn may reach the network at all.
-  #
-  # Two states rather than a boolean, because the third — an allowlist of
-  # hosts — is the one an operator will eventually want, and a `Bool` has
-  # nowhere to put it. `FsUtils::Tools::Config::Fetch` already carries the
-  # policy; this says whether the tool that consults it is offered.
-  #
-  # `None` does not offer the tool rather than offering it and refusing every
-  # URL. A refusal costs a call and teaches a model something it cannot act
-  # on, and `FsUtils` gives the empty-allowlist refusal its own "stop, do not
-  # retry" suggestion precisely because it is unfixable from the model's side.
-  enum WebAccess
-    # No tool that leaves the machine is offered.
-    None
-    # Any host the tool's own policy permits, which today is any public one.
-    Any
-  end
-
   # How the CLI behaves, as opposed to where requests go or what is asked of
   # a model. The third question, and the one that had no home: a server is
   # *where*, a deployment is *what to ask of which model*, and neither of them
@@ -162,16 +146,26 @@ module Cogiteer
     # gains arrives without anyone editing a list here; an empty list offers
     # none. The names are checked where the tools are known, not here.
     getter tools : Array(String)?
-    # Whether a turn may leave the machine. `None` by default: a tool that
+    # Whether a turn may leave the machine. False by default: a tool that
     # reaches the internet is something an operator turns on, not something
     # they discover a dependency update gave them.
-    getter web : WebAccess
+    #
+    # False does not offer the tool, rather than offering it and refusing
+    # every URL. A refusal costs a call and teaches a model something it
+    # cannot act on, and `FsUtils` gives the empty-allowlist refusal its own
+    # "stop, do not retry" suggestion precisely because it is unfixable from
+    # the model's side.
+    #
+    # *Whether* the tool is offered is this key; *where* it may go is
+    # `toolkit.fetch`. A boolean because the third state this was once an
+    # enum for — an allowlist of hosts — found its home in that table instead.
+    getter? web : Bool
 
     def initialize(@streaming : Bool = false, @show_reasoning : Bool = false,
                    @max_tool_calls : Int32 = DEFAULT_MAX_TOOL_CALLS,
                    @reproducible_tools : Bool = false,
                    @tools : Array(String)? = nil,
-                   @web : WebAccess = WebAccess::None)
+                   @web : Bool = false)
       raise ConfigError.new("max_tool_calls is #{@max_tool_calls} — expected 0 or more") if @max_tool_calls < 0
     end
 
@@ -179,24 +173,21 @@ module Cogiteer
     def tools? : Bool
       @max_tool_calls > 0
     end
-
-    # Whether this run may reach the network.
-    #
-    # Compared rather than asked via `WebAccess::Any`'s generated `any?`
-    # predicate, which reads as `Enumerable#any?` to a human and to Ameba.
-    def web? : Bool
-      @web == WebAccess::Any
-    end
   end
 
   class Config
     getter defaults : Defaults
     getter servers : Hash(String, ServerConfig)
     getter deployments : Hash(String, Deployment)
+    # How the tools behave once offered. A third top-level table rather than a
+    # key under `defaults`, where every key pairs with a flag of the same name
+    # and nested per-tool bounds could not.
+    getter toolkit : FsUtils::Tools::Config
 
     def initialize(@servers : Hash(String, ServerConfig),
                    @deployments : Hash(String, Deployment),
-                   @defaults : Defaults = Defaults.new)
+                   @defaults : Defaults = Defaults.new,
+                   @toolkit : FsUtils::Tools::Config = FsUtils::Tools::Config.new)
     end
 
     # `$CWD/cogiteer.yaml`, then `$HOME/cogiteer.yaml`. See `docs/DESIGN.md`.
@@ -247,7 +238,7 @@ module Cogiteer
         deployments[name] = parse_deployment(name, node, servers)
       end
 
-      new(servers, deployments, parse_defaults(root["defaults"]?))
+      new(servers, deployments, parse_defaults(root["defaults"]?), Toolkit.parse(root["toolkit"]?))
     end
 
     # Absent means the defaults, which are what the CLI did before this block
@@ -264,7 +255,7 @@ module Cogiteer
         max_tool_calls: parse_count(node, "max_tool_calls", Defaults::DEFAULT_MAX_TOOL_CALLS),
         reproducible_tools: parse_flag(node, "reproducible_tools"),
         tools: parse_names(node, "tools"),
-        web: parse_web(node),
+        web: parse_flag(node, "web"),
       )
     end
 
@@ -284,32 +275,6 @@ module Cogiteer
              raise ConfigError.new("'defaults.#{key}' is #{field.raw.inspect} — expected a list of tool names")
       list.map do |entry|
         entry.as_s? || raise ConfigError.new("'defaults.#{key}' holds #{entry.raw.inspect} — expected a tool name")
-      end
-    end
-
-    # `none` or `any`. Absent means `none`.
-    #
-    # **`off` is not a spelling here, for the reason `parse_reasoning` gives
-    # one layer down.** YAML 1.1 reads a bare `off` as boolean false, so
-    # `web: off` would arrive as a bool and fail confusingly. One word, and a
-    # bare boolean gets an error that says which word to write instead.
-    private def self.parse_web(node : YAML::Any) : WebAccess
-      field = node["web"]?
-      return WebAccess::None if field.nil? || field.raw.nil?
-
-      unless field.as_bool?.nil?
-        raise ConfigError.new("'defaults.web' is a boolean — YAML reads a bare on/off/yes/no as one; " \
-                              "write 'none' or 'any'")
-      end
-
-      mode = field.as_s? ||
-             raise ConfigError.new("'defaults.web' is #{field.raw.inspect} — expected none or any")
-
-      case mode.downcase
-      when "none" then WebAccess::None
-      when "any"  then WebAccess::Any
-      else
-        raise ConfigError.new("'defaults.web' is #{mode.inspect} — expected none or any")
       end
     end
 
