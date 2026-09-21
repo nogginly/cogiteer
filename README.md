@@ -189,10 +189,25 @@ defaults:
   reproducible_tools: false
   web: false                              # true allows web fetches
   # tools: [read_text_file, find_files]   # absent offers every local tool
+
+# toolkit:                                # how the tools behave once offered
+#   grep:
+#     max_depth: 8
+#   fetch:
+#     allowed_hosts: [docs.crystal-lang.org]
 ```
 
 Every key under `defaults` has a flag of the same name, so anything set here can
 be overridden for one run.
+
+**`toolkit`** is the exception, and has no flags: it holds the toolkit's own
+bounds — search depths, read and write sizes, the fetch host lists and timeout,
+where scratch lives — which are nested per tool and could not pair with a flag.
+`defaults` decides *whether* a tool is offered; `toolkit` decides how it behaves
+once it is. Every section and every bound is optional, and naming one leaves the
+rest at the toolkit's defaults. The keys are `fsutils`' own, listed in its
+[DESIGN][fsutils]; a key this file does not recognise is an error rather than
+being quietly ignored.
 
 Sessions are stored under `$COGITEER_HOME`, else `./.cogiteer` if it exists,
 else `~/.cogiteer` — one folder per session, one snapshot per turn.
