@@ -36,8 +36,10 @@ module ToolHarness
   # re-record every transcript. `reproducible_tools` is always on, because a
   # tool's result is part of the next request body and an mtime or elapsed
   # time would stop it replaying.
-  def self.ollama(max_tool_calls : Int32, tools : Array(String)) : String
-    <<-YAML
+  # `toolkit` is appended verbatim when given, so a spec needing a bound sets
+  # it the way an operator would rather than through a seam in the source.
+  def self.ollama(max_tool_calls : Int32, tools : Array(String), toolkit : String? = nil) : String
+    body = <<-YAML
       servers:
         ollama:
           protocol: chat_completions
@@ -51,6 +53,8 @@ module ToolHarness
         reproducible_tools: true
         tools: [#{tools.join(", ")}]
       YAML
+
+    toolkit ? "#{body}\n#{toolkit}" : body
   end
 
   # Runs the block with `yaml` as the config and an empty session home,

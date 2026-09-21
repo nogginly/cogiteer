@@ -110,10 +110,11 @@ Search order: `$COGITEER_CONFIG` if set — the literal path, no search — else
 env var naming the file directly always wins over guessing from what
 happens to exist.
 
-Two tables and a block. A **server** is somewhere to send requests and the
+Three tables and a block. A **server** is somewhere to send requests and the
 protocol it speaks; a **deployment** is a named way to reach one model on one
 server; **defaults** is how the CLI itself behaves, which is the third question
-and belongs to neither of the first two.
+and belongs to neither of the first two; **toolkit** is how the tools behave
+once offered, which belongs to none of the three.
 
 ```yaml
 defaults:
@@ -156,6 +157,13 @@ deployments:
     server: home-ollama
     model: gemma4-27b
     reasoning_retention: completed_turns
+
+toolkit:
+  grep:
+    max_depth: 8
+  fetch:
+    allowed_hosts: [docs.crystal-lang.org]
+    timeout_seconds: 10.0
 ```
 
 Credentials are referenced by environment variable name, never stored in the
@@ -174,7 +182,7 @@ Key                 |Default|Flag                                             |M
 `max_tool_calls`    |`50`   |`--max-tool-calls`                               |Ceiling on tool calls in one turn; `0` offers no tools
 `tools`             |absent |`--tools`                                        |Which tools to offer; absent is all, `[]` is none     
 `reproducible_tools`|`false`|`--reproducible-tools`, `--no-reproducible-tools`|Omit when and where a tool call ran                   
-`web`               |`none` |`--web`, `--no-web`                              |Whether a turn may reach the network                  
+`web`               |`false`|`--web`, `--no-web`                              |Whether a turn may reach the network                  
 
 **Every key here pairs with a flag of the same name**, and that is the rule the
 block is held to rather than a coincidence. A key with no flag behind it is how
@@ -190,11 +198,16 @@ shape — facts about one invocation, not about how the CLI behaves.
 `--no-edit` does not. `--no-edit` subtracts for one run from a set the
 operator already chose; `web` decides whether a capability is available at
 all, which is a standing decision about a machine rather than a fact about one
-invocation. It is two words rather than a boolean — `none` and `any` — because
-the state an operator will want next is a list of permitted hosts, and a
-`Bool` has nowhere to put one. **`off` is not a spelling**, for the reason
-`reasoning` gives below: YAML 1.1 reads a bare `off` as boolean false, so it
-would arrive as the wrong type and fail confusingly.
+invocation.
+
+It was two words rather than a boolean — `none` and `any` — because the state
+an operator would want next was a list of permitted hosts, and a `Bool` had
+nowhere to put one. That list found a better home in `toolkit.fetch`, which
+bounds how the tool behaves rather than whether it is offered, so the key is
+now the boolean its one remaining question deserves. `any` was overclaiming
+besides: the default host policy refuses loopback and private address ranges,
+so it never meant any host. **`off` is a spelling now**, and means false —
+YAML 1.1 reads it as a boolean, which is what this key holds.
 
 The two flags default to false, which is what the CLI did before the block
 existed. `max_tool_calls` is the one key whose default is not the old
@@ -209,6 +222,41 @@ case double as a value.
 
 Precedence — flag, then this block, then a terminal test — is in *Streaming*
 below, along with the one asymmetry in it worth arguing about.
+
+### `toolkit:` is a third top-level table, not a key under `defaults:`
+
+Every key under `defaults:` pairs with a flag of the same name, so there is no
+translation table between the config and `--help`. Nested per-tool bounds
+cannot pair with a flag, and a `max_depth` under `defaults` would be the first
+key there with nothing behind it — which is how that section becomes a junk
+drawer. It also cannot go under `defaults.tools`, which already means *which
+tools to offer*: one key meaning two things depending on whether a list or a
+mapping follows is a shape refused elsewhere in this document.
+
+The table deserialises straight into `FsUtils::Tools::Config` rather than being
+curated under local key names. A curated subset reads nicer and costs a
+translation table between two files that must be kept in step, plus a change
+here for every bound the shard adds or renames. `Arguments` is the only other
+place this project stands between itself and `fsutils`, and it exists to
+preserve pass-through rather than to interpret.
+
+**The ownership line.** `cogiteer` decides whether a tool is offered — `tools`,
+`web`, `--no-edit`, `max_tool_calls`. `fsutils` decides how it behaves once
+offered. The one field this project drives is `reproducible`, overwritten after
+parsing so a flag never loses silently to a file.
+
+### Unknown keys raise here, where `defaults` lets them pass
+
+`YAML::Serializable` ignores keys it does not recognise, and so, as it happens,
+does the hand-written parser for `defaults`: a misspelled `streamng:` parses
+today and does nothing. `toolkit:` departs from that deliberately. A misspelled
+flag is visible in what the CLI does; a misspelled bound is visible nowhere,
+because the tool goes on working at a limit nobody chose.
+
+The known-key set is derived from `FsUtils::Tools::Config` at compile time
+rather than written out, so a bound the shard adds is accepted the day the lock
+moves and none of this needs editing. `YAML::Serializable::Strict` would have
+raised too, but in the shard's vocabulary rather than in `cogiteer.yaml`'s.
 
 ### Model preferences: `reasoning` and `reasoning_retention`
 

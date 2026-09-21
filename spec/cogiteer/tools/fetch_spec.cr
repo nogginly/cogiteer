@@ -24,15 +24,13 @@ private MARKER = "one hundred degrees"
 
 describe "the CLI's web fetch" do
   it "fetches a page, converts it, and archives the result" do
-    ToolHarness.with_config(ToolHarness.ollama(50, TOOLS)) do
+    ToolHarness.with_config(ToolHarness.ollama(50, TOOLS, WebFixture::TOOLKIT)) do
       WebFixture.serving do |base|
-        WebFixture.allowing_private_hosts do
-          Wiretap.intercept("tools_fetch_markdown") do
-            Cogiteer::Commands::Start.run(["ollama",
-                                           "Fetch #{base}/small and tell me what temperature it names.",
-                                           "Use the tool; do not guess.",
-                                           "--web"])
-          end
+        Wiretap.intercept("tools_fetch_markdown") do
+          Cogiteer::Commands::Start.run(["ollama",
+                                         "Fetch #{base}/small and tell me what temperature it names.",
+                                         "Use the tool; do not guess.",
+                                         "--web"])
         end
 
         session = ToolHarness.only_session
@@ -58,15 +56,13 @@ describe "the CLI's web fetch" do
   # Recorded separately because the declared tool list differs, which is a
   # different request body.
   it "offers nothing to fetch with when --no-web is given" do
-    ToolHarness.with_config(ToolHarness.ollama(50, TOOLS)) do
+    ToolHarness.with_config(ToolHarness.ollama(50, TOOLS, WebFixture::TOOLKIT)) do
       WebFixture.serving do |base|
-        WebFixture.allowing_private_hosts do
-          Wiretap.intercept("tools_fetch_refused") do
-            Cogiteer::Commands::Start.run(["ollama",
-                                           "Fetch #{base}/small and tell me what temperature it names.",
-                                           "If you cannot fetch, say so plainly.",
-                                           "--no-web"])
-          end
+        Wiretap.intercept("tools_fetch_refused") do
+          Cogiteer::Commands::Start.run(["ollama",
+                                         "Fetch #{base}/small and tell me what temperature it names.",
+                                         "If you cannot fetch, say so plainly.",
+                                         "--no-web"])
         end
 
         session = ToolHarness.only_session

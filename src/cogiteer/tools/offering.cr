@@ -30,29 +30,6 @@ module Cogiteer::Tools
     class UnknownTool < Exception
     end
 
-    # A seam for the suite, and nothing else.
-    #
-    # `HostPolicy` refuses loopback unless `allow_private_hosts` is set, so a
-    # recorded fetch spec cannot reach its own fixture server. The setting
-    # lives on `FsUtils::Tools::Config`, which this project has no way to
-    # write — `SCOPE.md`'s toolkit-config item is that gap, deliberately
-    # deferred until the web tool ships.
-    #
-    # State rather than a parameter because the spec drives the CLI from
-    # `Commands::Start.run`, so it is not the caller of `toolbox` and has
-    # nothing to pass. Protected rather than public so it is not API: the
-    # suite reaches it by reopening this module, which is a thing a reader can
-    # find and a consumer cannot reach by accident.
-    #
-    # **Delete this when `toolkit:` lands.** The spec will set the host policy
-    # the way an operator would, and a seam that survives its replacement is
-    # how a project acquires two ways to do one thing.
-    @@allow_private_hosts = false
-
-    protected def self.allow_private_hosts=(value : Bool)
-      @@allow_private_hosts = value
-    end
-
     # `names` narrows what is offered; `nil` offers everything `FsUtils` has,
     # so a tool the toolkit gains arrives without a change here. An empty list
     # offers nothing, which is a thing an operator can mean.
@@ -76,6 +53,10 @@ module Cogiteer::Tools
     # was asked for, and this one has to be asked for. Egress is not something
     # a `shards update` should be able to turn on.
     #
+    # `toolkit` is the operator's `toolkit:` table — every bound the tools run
+    # under. It arrives already parsed, and this project overwrites exactly one
+    # field of it, below, so that a flag never loses silently to a file.
+    #
     # `reproducible` drops the fields reporting *when and where* a call ran — a
     # walk's `elapsed_ms`, a find result's `modified` — leaving a response
     # derived only from the tree. Off by default, because an mtime is how a
@@ -94,11 +75,10 @@ module Cogiteer::Tools
                      names : Array(String)? = nil,
                      no_edit : Bool = false,
                      web : Bool = false,
-                     reproducible : Bool = false) : Liaison::Toolbox
-      config = FsUtils::Tools::Config.new
-      config.reproducible = reproducible
-      config.fetch.allow_private_hosts = true if @@allow_private_hosts
-      tools = FsUtils::Tools.new(root, config)
+                     reproducible : Bool = false,
+                     toolkit : FsUtils::Tools::Config = FsUtils::Tools::Config.new) : Liaison::Toolbox
+      toolkit.reproducible = reproducible
+      tools = FsUtils::Tools.new(root, toolkit)
 
       definitions = tools.definitions
       if names

@@ -108,7 +108,8 @@ module Cogiteer::Commands
           reasoning: d.reasoning, retention: d.reasoning_retention,
           display: display, indicator: ticker,
           max_tool_calls: tool_calls, reproducible_tools: reproducible,
-          tool_names: tools, no_edit_tools: no_edit_tools, web_tools: web)
+          tool_names: tools, no_edit_tools: no_edit_tools, web_tools: web,
+          toolkit: config.toolkit)
       end
 
       Sessions.snapshot(id, session, deployment_name)
