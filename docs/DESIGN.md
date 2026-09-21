@@ -116,55 +116,10 @@ server; **defaults** is how the CLI itself behaves, which is the third question
 and belongs to neither of the first two; **toolkit** is how the tools behave
 once offered, which belongs to none of the three.
 
-```yaml
-defaults:
-  streaming: false
-  show_reasoning: false
-
-servers:
-  anthropic:
-    protocol: anthropic
-    url: https://api.anthropic.com
-    credential_env: ANTHROPIC_API_KEY
-
-  azure-alpha:
-    protocol: chat_completions
-    url: https://oxaro-alpha.openai.azure.com
-    credential_env: AZURE_OPENAI_API_KEY
-    max_tokens_field: max_completion_tokens
-    azure:
-      api_version: "2025-04-01-preview"
-
-  home-ollama:
-    protocol: chat_completions
-    url: http://localhost:11434
-
-deployments:
-  haiku:
-    server: anthropic
-    model: claude-haiku-4-5
-
-  azure-mini:
-    server: azure-alpha
-    model: gpt5.4mini
-
-  qwen:
-    server: home-ollama
-    model: qwen3.8
-    reasoning: none
-
-  gemma:
-    server: home-ollama
-    model: gemma4-27b
-    reasoning_retention: completed_turns
-
-toolkit:
-  grep:
-    max_depth: 8
-  fetch:
-    allowed_hosts: [docs.crystal-lang.org]
-    timeout_seconds: 10.0
-```
+Every key, what it accepts, its default and its flag are catalogued once, in
+the README's [Configuration](../README.md#configuration) section. This chapter
+is about why they are shaped that way, and keeps no example of its own: two
+copies of one file format drift, and the first one to go stale was this one.
 
 Credentials are referenced by environment variable name, never stored in the
 file.
@@ -174,15 +129,6 @@ file.
 No key here describes where a request goes or what is asked of a model, which
 is why they are not on a server or a deployment. They describe what the CLI
 does while an answer is being got.
-
-Key                 |Default|Flag                                             |Means                                                 
---------------------|-------|-------------------------------------------------|------------------------------------------------------
-`streaming`         |`false`|`--stream`, `--no-stream`                        |Show the reply as it arrives                          
-`show_reasoning`    |`false`|`--show-reasoning`, `--hide-reasoning`           |Put reasoning deltas on stderr as they arrive         
-`max_tool_calls`    |`50`   |`--max-tool-calls`                               |Ceiling on tool calls in one turn; `0` offers no tools
-`tools`             |absent |`--tools`                                        |Which tools to offer; absent is all, `[]` is none     
-`reproducible_tools`|`false`|`--reproducible-tools`, `--no-reproducible-tools`|Omit when and where a tool call ran                   
-`web`               |`false`|`--web`, `--no-web`                              |Whether a turn may reach the network                  
 
 **Every key here pairs with a flag of the same name**, and that is the rule the
 block is held to rather than a coincidence. A key with no flag behind it is how

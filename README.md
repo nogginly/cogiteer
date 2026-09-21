@@ -96,11 +96,15 @@ spec/cogiteer/tools/tools_spec.cr — its second example caps the run at one cal
 The loop, and where each control bites:
 
 ```mermaid
+---
+config:
+  layout: elk
+---
 flowchart TD
     P[Prompt] --> R[Ask the deployment]
-    R --> C{Tool calls in the reply?}
+    R --> C{{Tool calls in the reply?}}
     C -- no --> A[Answer]
-    C -- yes --> B{Budget left?}
+    C -- yes --> B{{Budget left?}}
     B -- yes --> X[Run them in the workspace]
     X --> R
     B -- no --> F[Refuse, and ask for a closing summary]
@@ -160,60 +164,106 @@ Two things worth knowing before you turn it on:
 ## Configuration
 
 Deployments are named in `cogiteer.yaml`, found via `$COGITEER_CONFIG`, then
-`$CWD`, then `$HOME`. Two tables and a block: a **server** is a url plus the
-protocol it speaks, a **deployment** names one model on one server, and
-**`defaults`** is how the CLI itself behaves.
+`$CWD`, then `$HOME`. Three tables and a block: a **server** is somewhere to
+send requests and the protocol it speaks, a **deployment** names one model on
+one server, **`defaults`** is how the CLI itself behaves, and **`toolkit`** is
+how the tools behave once offered.
 
 ```yaml
 servers:
   ollama:
-    url: http://localhost:11434/v1
     protocol: chat_completions
+    url: http://localhost:11434/v1
   anthropic:
-    url: https://api.anthropic.com/v1
     protocol: anthropic
+    url: https://api.anthropic.com/v1
     credential_env: ANTHROPIC_API_KEY
+  azure-alpha:
+    protocol: chat_completions
+    url: https://oxaro-alpha.openai.azure.com
+    credential_env: AZURE_OPENAI_API_KEY
+    max_tokens_field: max_completion_tokens
+    azure:
+      api_version: "2025-04-01-preview"
 
 deployments:
-  ollama:
+  qwen:
     server: ollama
     model: qwen3:8b
-  anthropic:
+    reasoning: none
+  sonnet:
     server: anthropic
     model: claude-sonnet-4-5
+  azure-mini:
+    server: azure-alpha
+    model: gpt5.4mini
+    reasoning_retention: completed_turns
 
 defaults:
   streaming: false
-  show_reasoning: false
-  max_tool_calls: 50
-  reproducible_tools: false
-  web: false                              # true allows web fetches
-  # tools: [read_text_file, find_files]   # absent offers every local tool
+  web: false
 
-# toolkit:                                # how the tools behave once offered
-#   grep:
-#     max_depth: 8
-#   fetch:
-#     allowed_hosts: [docs.crystal-lang.org]
+toolkit:
+  grep:
+    max_depth: 8
+  fetch:
+    allowed_hosts: [docs.crystal-lang.org]
 ```
 
-Every key under `defaults` has a flag of the same name, so anything set here can
-be overridden for one run.
+Credentials are named by environment variable, never stored in the file.
 
-**`toolkit`** is the exception, and has no flags: it holds the toolkit's own
-bounds — search depths, read and write sizes, the fetch host lists and timeout,
-where scratch lives — which are nested per tool and could not pair with a flag.
-`defaults` decides *whether* a tool is offered; `toolkit` decides how it behaves
-once it is. Every section and every bound is optional, and naming one leaves the
-rest at the toolkit's defaults. The keys are `fsutils`' own, listed in its
+### `servers`
+
+Key               |Required|Means                                                                   
+------------------|--------|------------------------------------------------------------------------
+`protocol`        |yes     |`chat_completions`, `responses`, or `anthropic`                         
+`url`             |yes     |Where requests go                                                       
+`credential_env`  |no      |The environment variable holding the API key                            
+`max_tokens_field`|no      |`max_tokens` or `max_completion_tokens`; `chat_completions` servers only
+`azure`           |no      |Marks an Azure endpoint; holds a required `api_version`                 
+
+### `deployments`
+
+Key                  |Required|Means                                                                                  
+---------------------|--------|---------------------------------------------------------------------------------------
+`server`             |yes     |A name under `servers`                                                                 
+`model`              |yes     |The model, as that server names it                                                     
+`reasoning`          |no      |`low`, `medium`, `high`, `xhigh`, `max`, `none`, or a token budget; absent asks nothing
+`reasoning_retention`|no      |`all`, `completed_turns`, or `none`: which turns' reasoning is replayed                
+
+`reasoning: none` asks the model not to think; leaving the key out leaves the
+provider's own default alone. They are different requests.
+
+### `defaults`
+
+Every key has a flag of the same name, so anything set here can be overridden
+for one run.
+
+Key                 |Default|Flag                                             |Means                                                 
+--------------------|-------|-------------------------------------------------|------------------------------------------------------
+`streaming`         |`false`|`--stream`, `--no-stream`                        |Show the reply as it arrives                          
+`show_reasoning`    |`false`|`--show-reasoning`, `--hide-reasoning`           |Put reasoning deltas on stderr as they arrive         
+`max_tool_calls`    |`50`   |`--max-tool-calls`                               |Ceiling on tool calls in one turn; `0` offers no tools
+`tools`             |absent |`--tools`                                        |Which tools to offer; absent is all, `[]` is none     
+`reproducible_tools`|`false`|`--reproducible-tools`, `--no-reproducible-tools`|Omit when and where a tool call ran                   
+`web`               |`false`|`--web`, `--no-web`                              |Whether a turn may reach the network                  
+
+### `toolkit`
+
+The exception to the flag rule: it holds the toolkit's own bounds — search
+depths, read and write sizes, the fetch host lists and timeout, where scratch
+lives — which are nested per tool and could not pair with a flag. `defaults`
+decides *whether* a tool is offered; `toolkit` decides how it behaves once it
+is. Every section and every bound is optional, and naming one leaves the rest
+at the toolkit's defaults. The keys are `fsutils`' own, listed in its
 [DESIGN][fsutils]; a key this file does not recognise is an error rather than
 being quietly ignored.
 
 Sessions are stored under `$COGITEER_HOME`, else `./.cogiteer` if it exists,
 else `~/.cogiteer` — one folder per session, one snapshot per turn.
 
-See [docs/DESIGN.md](./docs/DESIGN.md) for the full format, the verb grammar,
-and why each is shaped the way it is.
+Why each of these is shaped the way it is — and what was tried first — is in
+[docs/DESIGN.md](./docs/DESIGN.md#config-cogiteeryaml).
 
 ## Installation
 
