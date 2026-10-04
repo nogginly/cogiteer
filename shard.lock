@@ -14,7 +14,7 @@ shards:
 
   liaison:
     git: https://github.com/modelarmy/liaison.cr.git
-    version: 0.2.2+git.commit.5afaaa08e36fbe25039011e48360f34bc3afd1b6
+    version: 0.2.2+git.commit.2d1a47127b50b271485f0b7fb93b9e00add3fdbf
 
   socket_connect_fix:
     git: https://github.com/nogginly/socket_connect_fix.cr.git

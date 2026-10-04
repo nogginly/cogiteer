@@ -92,8 +92,14 @@ Other transcript traps, each of which has already bitten:
 
 ## Next
 
-**Start with `SCOPE.md`'s one MUST FIX: only `toolkit:` refuses an unknown
-key.** Every other config parser ignores keys it does not recognise, including
+**Start with `SCOPE.md`'s two MUST FIXes, in the order listed.** The first: an
+unreadable reply, which `liaison` now raises for tool-call arguments that are
+not a JSON object, ends the run with a stack trace and no word about tools that
+already ran. The decision is made and recorded there; what remains is carrying
+the call count out of `Query.run` with the error. Nothing should re-record.
+
+**The second: only `toolkit:` refuses an unknown key.** Every other config
+parser ignores keys it does not recognise, including
 at the top level, so a misspelled `toolkt:` undoes the strictness that table
 has. `src/cogiteer/toolkit.cr` is the model for the messages; the hand-written
 parsers already know their keys, so each needs only to check the remainder.

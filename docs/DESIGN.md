@@ -672,10 +672,14 @@ without a single local call.
 ### Two endings, and why the second one exists
 
 Once the budget is spent, the next request still declares the tools and adds
-`tool_choice: None`. Dropping the tools instead would be a stronger guarantee
-and is not available: on Anthropic, a request whose history holds tool blocks
-and whose tool list is empty is rejected outright. It would also invalidate the
-prefix cache from position zero, on the largest history the turn will ever have.
+`tool_choice: None`. Dropping the tools instead would be a stronger guarantee,
+and it is available: Anthropic was reported to reject tool history sent with no
+tools declared, and `liaison` has since recorded it accepting one on Haiku
+(`docs/protocols/ANTHROPIC.md` there). What it costs is the prefix cache. Tool
+definitions render ahead of everything else, so withdrawing them invalidates
+the cache from position zero, on the largest history the turn will ever have.
+Whether that price is worth paying on a server that ignores the choice is in
+`SCOPE.md`.
 
 A provider that honours the choice replies in prose, and the turn ends with a
 summary the user can resume from. That is the intended ending and it is what
@@ -887,7 +891,7 @@ flowchart TD
 
 A redirected run displays nothing incrementally, so streaming buys it nothing
 — while costing it a failure class it does not otherwise have. The stream that
-ends without its terminal frame — class 3 in `liaison`'s own scope notes —
+ends without its terminal frame — class 3 in `liaison`'s `STREAMING_DESIGN.md` —
 **exists only when you stream**. Accepting a new way to be silently truncated
 in exchange for no visible benefit is a bad trade, so the non-tty path asks for
 one body.
