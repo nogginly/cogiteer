@@ -18,6 +18,24 @@ mapper, an exporter or the archive format, it is not this file's.
 
 ## MUST FIX
 
+- **An unreadable reply ends the run with a stack trace, and says nothing of
+  what the tools already did.** `liaison` raises
+  `Protocol::MalformedResponseError` for a reply it cannot read, and since the
+  lock moved to `2d1a471` that includes tool-call arguments that are not a JSON
+  object, which a local model can produce. `main.cr` catches neither that nor
+  `Protocol::StreamError`. Nothing is saved, because the snapshot is written
+  only after `Query.run` returns. The completed rounds are not the loss — the
+  session up to them is sendable, since the bad reply never became a message.
+  The loss is the record of what they did: a `text_replace` that ran is still
+  on disk, and a retried prompt meets its own earlier edit with no history to
+  explain it. Decided: catch both, exit 1, and report how many calls ran and
+  whether any changed workspace files. The trap is where the count lives: inside
+  `Query.run`'s loop, which the exception leaves, so it has to travel with the
+  error rather than be reconstructed in `main.cr`, which knows nothing of the
+  turn. Whether a call changed files is its `Definition`'s `WorkspaceWrite`
+  capability, not a guess from its name. Saving the partial session instead is
+  the fuller answer, and changes what a snapshot may end on; not now.
+
 - **Only `toolkit:` refuses a key it does not recognise.** Every other parser in
   `config.cr` reads the keys it knows and ignores the rest: the top level,
   `defaults`, each server and deployment entry, and a server's `azure` block. A
@@ -42,6 +60,20 @@ mapper, an exporter or the archive format, it is not this file's.
   trace — but the operator has to know in advance which pairs need which
   setting, which is not a reasonable thing to expect. Intrinsic to a
   cross-provider session tool, so reasoning will not be the last instance.
+
+- **On a server that ignores `tool_choice: None`, a capped turn ends without a
+  summary.** Ollama answers `None` with another call, so a capped local turn
+  ends on refused calls rather than prose (`DESIGN.md`, *Two endings*). Dropping
+  the tools from the final request would likely force prose, and Anthropic no
+  longer rules it out: `liaison` recorded Haiku accepting tool history with no
+  tools declared. Two things stand in the way. The price is the prefix cache on
+  the longest request of the turn. And nobody knows whether Ollama still turns a
+  call written as text into a structured one when no tools are declared — the
+  local model already names tools it was never offered. Only a recording
+  answers that, and changing the final request re-records every capped
+  transcript, the paid `anthropic_tools_capped` included if it applies on every
+  protocol. Applying it only where the choice is ignored needs that fact to live
+  somewhere, on the server entry or in `liaison`'s catalog.
 
 - **The workspace root is the working directory, and nothing can move it.**
   Deliberate for now: the tools are for the project someone is standing in, and
